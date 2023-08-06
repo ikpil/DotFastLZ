@@ -22,104 +22,119 @@
   THE SOFTWARE.
 */
 
-// int compare(const char* name, const uint8_t* a, const uint8_t* b, int size) {
+using System;
+using NUnit.Framework;
+
+namespace DotFastLZ.Compression.Tests;
+
+public class RoundtripTests
+{
+    private const int MAX_FILE_SIZE = 100 * 1024 * 1024;
+    //private const int MAX_FILE_SIZE = 32 * 1024 * 1024;
+
+    private string[] _names;
+
+    // int compare(const char* name, const uint8_t* a, const uint8_t* b, int size) {
 //   int bad = 0;
 //   int i;
 //   for (i = 0; i < size; ++i) {
 //     if (a[i] != b[i]) {
 //       bad = 1;
-//       printf("Error on %s!\n", name);
-//       printf("Different at index %d: expecting %02x,actual %02x\n", i, a[i], b[i]);
+//       Console.WriteLine("Error on %s!", name);
+//       Console.WriteLine("Different at index %d: expecting %02x,actual %02x", i, a[i], b[i]);
 //       break;
 //     }
 //   }
 //   return bad;
 // }
 //
-// #if !defined(__MSDOS__)
-// #define MAX_FILE_SIZE (100 * 1024 * 1024)
-// #else
-// #define MAX_FILE_SIZE (32 * 1024 * 1024)
-// #endif
 //
 // /* prototype, implemented in refimpl.c */
 // void REF_Level1_decompress(const uint8_t* input, int length, uint8_t* output);
 // void REF_Level2_decompress(const uint8_t* input, int length, uint8_t* output);
 //
-// /*
-//   Same as test_roundtrip_level1 EXCEPT that the decompression is carried out
-//   using the highly-simplified, unoptimized vanilla reference decompressor.
-// */
-//
-// void test_ref_decompressor_level1(const char* name, const char* file_name) {
-// #ifdef LOG
-//   printf("Processing %s...\n", name);
+/*
+  Same as test_roundtrip_level1 EXCEPT that the decompression is carried out
+  using the highly-simplified, unoptimized vanilla reference decompressor.
+*/
+    private void test_ref_decompressor_level1(string name, string file_name)
+    {
+// #if LOG
+//     Console.WriteLine("Processing %s...", name);
 // #endif
-//   FILE* f = fopen(file_name, "rb");
-//   if (!f) {
-//     printf("Error: can not open %s!\n", file_name);
-//     exit(1);
-//   }
-//   fseek(f, 0L, SEEK_END);
-//   long file_size = ftell(f);
-//   rewind(f);
+//         FILE* f = fopen(file_name, "rb");
+//         if (!f)
+//         {
+//             Console.WriteLine("Error: can not open %s!", file_name);
+//             exit(1);
+//         }
 //
-// #ifdef LOG
-//   printf("Size is %ld bytes.\n", file_size);
-// #endif
-//   if (file_size > MAX_FILE_SIZE) {
-//     fclose(f);
-//     printf("%25s %10ld [skipped, file too big]\n", name, file_size);
-//     return;
-//   }
+//         fseek(f, 0L, SEEK_END);
+//         long file_size = ftell(f);
+//         rewind(f);
 //
-//   uint8_t* file_buffer = malloc(file_size);
-//   long read = fread(file_buffer, 1, file_size, f);
-//   fclose(f);
-//   if (read != file_size) {
-//     free(file_buffer);
-//     printf("Error: only read %ld bytes!\n", read);
-//     exit(1);
-//   }
+// #if LOG
+//     Console.WriteLine("Size is %ld bytes.", file_size);
+// #endif
+//         if (file_size > MAX_FILE_SIZE)
+//         {
+//             fclose(f);
+//             Console.WriteLine("%25s %10ld [skipped, file too big]", name, file_size);
+//             return;
+//         }
 //
-// #ifdef LOG
-//   printf("Compressing. Please wait...\n");
+//         uint8_t* file_buffer = malloc(file_size);
+//         long read = fread(file_buffer, 1, file_size, f);
+//         fclose(f);
+//         if (read != file_size)
+//         {
+//             free(file_buffer);
+//             Console.WriteLine("Error: only read %ld bytes!", read);
+//             exit(1);
+//         }
+//
+// #if LOG
+//     Console.WriteLine("Compressing. Please wait...");
 // #endif
-//   uint8_t* compressed_buffer = malloc(1.05 * file_size);
-//   int compressed_size = fastlz_compress_level(1, file_buffer, file_size, compressed_buffer);
-//   double ratio = (100.0 * compressed_size) / file_size;
-// #ifdef LOG
-//   printf("Compressing was completed: %ld -> %ld (%.2f%%)\n", file_size, compressed_size, ratio);
+//         uint8_t* compressed_buffer = malloc(1.05 * file_size);
+//         int compressed_size = fastlz_compress_level(1, file_buffer, file_size, compressed_buffer);
+//         double ratio = (100.0 * compressed_size) / file_size;
+// #if LOG
+//     Console.WriteLine("Compressing was completed: %ld -> %ld (%.2f%%)", file_size, compressed_size, ratio);
 // #endif
 //
-// #ifdef LOG
-//   printf("Decompressing. Please wait...\n");
+// #if LOG
+//     Console.WriteLine("Decompressing. Please wait...");
 // #endif
-//   uint8_t* uncompressed_buffer = malloc(file_size);
-//   if (uncompressed_buffer == NULL) {
-//     printf("%25s %10ld  -> %10d  (%.2f%%)  skipped, can't decompress\n", name, file_size, compressed_size, ratio);
-//     return;
-//   }
-//   memset(uncompressed_buffer, '-', file_size);
-//   REF_Level1_decompress(compressed_buffer, compressed_size, uncompressed_buffer);
-// #ifdef LOG
-//   printf("Comparing. Please wait...\n");
-// #endif
-//   int result = compare(file_name, file_buffer, uncompressed_buffer, file_size);
-//   if (result == 1) {
-//     free(uncompressed_buffer);
-//     exit(1);
-//   }
+//         uint8_t* uncompressed_buffer = malloc(file_size);
+//         if (uncompressed_buffer == NULL)
+//         {
+//             Console.WriteLine("%25s %10ld  -> %10d  (%.2f%%)  skipped, can't decompress", name, file_size, compressed_size, ratio);
+//             return;
+//         }
 //
-//   free(file_buffer);
-//   free(compressed_buffer);
-//   free(uncompressed_buffer);
-// #ifdef LOG
-//   printf("OK.\n");
+//         memset(uncompressed_buffer, '-', file_size);
+//         REF_Level1_decompress(compressed_buffer, compressed_size, uncompressed_buffer);
+// #if LOG
+//     Console.WriteLine("Comparing. Please wait...");
+// #endif
+//         int result = compare(file_name, file_buffer, uncompressed_buffer, file_size);
+//         if (result == 1)
+//         {
+//             free(uncompressed_buffer);
+//             exit(1);
+//         }
+//
+//         free(file_buffer);
+//         free(compressed_buffer);
+//         free(uncompressed_buffer);
+// #if LOG
+//     Console.WriteLine("OK.");
 // #else
-//   printf("%25s %10ld  -> %10d  (%.2f%%)\n", name, file_size, compressed_size, ratio);
+//         Console.WriteLine("%25s %10ld  -> %10d  (%.2f%%)", name, file_size, compressed_size, ratio);
 // #endif
-// }
+    }
+
 //
 // /*
 //   Same as test_roundtrip_level2 EXCEPT that the decompression is carried out
@@ -127,24 +142,24 @@
 // */
 //
 // void test_ref_decompressor_level2(const char* name, const char* file_name) {
-// #ifdef LOG
-//   printf("Processing %s...\n", name);
+// #if LOG
+//   Console.WriteLine("Processing %s...", name);
 // #endif
 //   FILE* f = fopen(file_name, "rb");
 //   if (!f) {
-//     printf("Error: can not open %s!\n", file_name);
+//     Console.WriteLine("Error: can not open %s!", file_name);
 //     exit(1);
 //   }
 //   fseek(f, 0L, SEEK_END);
 //   long file_size = ftell(f);
 //   rewind(f);
 //
-// #ifdef LOG
-//   printf("Size is %ld bytes.\n", file_size);
+// #if LOG
+//   Console.WriteLine("Size is %ld bytes.", file_size);
 // #endif
 //   if (file_size > MAX_FILE_SIZE) {
 //     fclose(f);
-//     printf("%25s %10ld [skipped, file too big]\n", name, file_size);
+//     Console.WriteLine("%25s %10ld [skipped, file too big]", name, file_size);
 //     return;
 //   }
 //
@@ -153,26 +168,26 @@
 //   fclose(f);
 //   if (read != file_size) {
 //     free(file_buffer);
-//     printf("Error: only read %ld bytes!\n", read);
+//     Console.WriteLine("Error: only read %ld bytes!", read);
 //     exit(1);
 //   }
 //
-// #ifdef LOG
-//   printf("Compressing. Please wait...\n");
+// #if LOG
+//   Console.WriteLine("Compressing. Please wait...");
 // #endif
 //   uint8_t* compressed_buffer = malloc(1.05 * file_size);
 //   int compressed_size = fastlz_compress_level(2, file_buffer, file_size, compressed_buffer);
 //   double ratio = (100.0 * compressed_size) / file_size;
-// #ifdef LOG
-//   printf("Compressing was completed: %ld -> %ld (%.2f%%)\n", file_size, compressed_size, ratio);
+// #if LOG
+//   Console.WriteLine("Compressing was completed: %ld -> %ld (%.2f%%)", file_size, compressed_size, ratio);
 // #endif
 //
-// #ifdef LOG
-//   printf("Decompressing. Please wait...\n");
+// #if LOG
+//   Console.WriteLine("Decompressing. Please wait...");
 // #endif
 //   uint8_t* uncompressed_buffer = malloc(file_size);
 //   if (uncompressed_buffer == NULL) {
-//     printf("%25s %10ld  -> %10d  (%.2f%%)  skipped, can't decompress\n", name, file_size, compressed_size, ratio);
+//     Console.WriteLine("%25s %10ld  -> %10d  (%.2f%%)  skipped, can't decompress", name, file_size, compressed_size, ratio);
 //     return;
 //   }
 //   memset(uncompressed_buffer, '-', file_size);
@@ -181,8 +196,8 @@
 //   compressed_buffer[0] = compressed_buffer[0] & 31;
 //
 //   REF_Level2_decompress(compressed_buffer, compressed_size, uncompressed_buffer);
-// #ifdef LOG
-//   printf("Comparing. Please wait...\n");
+// #if LOG
+//   Console.WriteLine("Comparing. Please wait...");
 // #endif
 //   int result = compare(file_name, file_buffer, uncompressed_buffer, file_size);
 //   if (result == 1) {
@@ -193,10 +208,10 @@
 //   free(file_buffer);
 //   free(compressed_buffer);
 //   free(uncompressed_buffer);
-// #ifdef LOG
-//   printf("OK.\n");
+// #if LOG
+//   Console.WriteLine("OK.");
 // #else
-//   printf("%25s %10ld  -> %10d  (%.2f%%)\n", name, file_size, compressed_size, ratio);
+//   Console.WriteLine("%25s %10ld  -> %10d  (%.2f%%)", name, file_size, compressed_size, ratio);
 // #endif
 // }
 //
@@ -207,24 +222,24 @@
 //   Compare the result with the original file content.
 // */
 // void test_roundtrip_level1(const char* name, const char* file_name) {
-// #ifdef LOG
-//   printf("Processing %s...\n", name);
+// #if LOG
+//   Console.WriteLine("Processing %s...", name);
 // #endif
 //   FILE* f = fopen(file_name, "rb");
 //   if (!f) {
-//     printf("Error: can not open %s!\n", file_name);
+//     Console.WriteLine("Error: can not open %s!", file_name);
 //     exit(1);
 //   }
 //   fseek(f, 0L, SEEK_END);
 //   long file_size = ftell(f);
 //   rewind(f);
 //
-// #ifdef LOG
-//   printf("Size is %ld bytes.\n", file_size);
+// #if LOG
+//   Console.WriteLine("Size is %ld bytes.", file_size);
 // #endif
 //   if (file_size > MAX_FILE_SIZE) {
 //     fclose(f);
-//     printf("%25s %10ld [skipped, file too big]\n", name, file_size);
+//     Console.WriteLine("%25s %10ld [skipped, file too big]", name, file_size);
 //     return;
 //   }
 //
@@ -233,32 +248,32 @@
 //   fclose(f);
 //   if (read != file_size) {
 //     free(file_buffer);
-//     printf("Error: only read %ld bytes!\n", read);
+//     Console.WriteLine("Error: only read %ld bytes!", read);
 //     exit(1);
 //   }
 //
-// #ifdef LOG
-//   printf("Compressing. Please wait...\n");
+// #if LOG
+//   Console.WriteLine("Compressing. Please wait...");
 // #endif
 //   uint8_t* compressed_buffer = malloc(1.05 * file_size);
 //   int compressed_size = fastlz_compress_level(1, file_buffer, file_size, compressed_buffer);
 //   double ratio = (100.0 * compressed_size) / file_size;
-// #ifdef LOG
-//   printf("Compressing was completed: %ld -> %ld (%.2f%%)\n", file_size, compressed_size, ratio);
+// #if LOG
+//   Console.WriteLine("Compressing was completed: %ld -> %ld (%.2f%%)", file_size, compressed_size, ratio);
 // #endif
 //
-// #ifdef LOG
-//   printf("Decompressing. Please wait...\n");
+// #if LOG
+//   Console.WriteLine("Decompressing. Please wait...");
 // #endif
 //   uint8_t* uncompressed_buffer = malloc(file_size);
 //   if (uncompressed_buffer == NULL) {
-//     printf("%25s %10ld  -> %10d  (%.2f%%)  skipped, can't decompress\n", name, file_size, compressed_size, ratio);
+//     Console.WriteLine("%25s %10ld  -> %10d  (%.2f%%)  skipped, can't decompress", name, file_size, compressed_size, ratio);
 //     return;
 //   }
 //   memset(uncompressed_buffer, '-', file_size);
 //   fastlz_decompress(compressed_buffer, compressed_size, uncompressed_buffer, file_size);
-// #ifdef LOG
-//   printf("Comparing. Please wait...\n");
+// #if LOG
+//   Console.WriteLine("Comparing. Please wait...");
 // #endif
 //   int result = compare(file_name, file_buffer, uncompressed_buffer, file_size);
 //   if (result == 1) {
@@ -269,10 +284,10 @@
 //   free(file_buffer);
 //   free(compressed_buffer);
 //   free(uncompressed_buffer);
-// #ifdef LOG
-//   printf("OK.\n");
+// #if LOG
+//   Console.WriteLine("OK.");
 // #else
-//   printf("%25s %10ld  -> %10d  (%.2f%%)\n", name, file_size, compressed_size, ratio);
+//   Console.WriteLine("%25s %10ld  -> %10d  (%.2f%%)", name, file_size, compressed_size, ratio);
 // #endif
 // }
 //
@@ -283,24 +298,24 @@
 //   Compare the result with the original file content.
 // */
 // void test_roundtrip_level2(const char* name, const char* file_name) {
-// #ifdef LOG
-//   printf("Processing %s...\n", name);
+// #if LOG
+//   Console.WriteLine("Processing %s...", name);
 // #endif
 //   FILE* f = fopen(file_name, "rb");
 //   if (!f) {
-//     printf("Error: can not open %s!\n", file_name);
+//     Console.WriteLine("Error: can not open %s!", file_name);
 //     exit(1);
 //   }
 //   fseek(f, 0L, SEEK_END);
 //   long file_size = ftell(f);
 //   rewind(f);
 //
-// #ifdef LOG
-//   printf("Size is %ld bytes.\n", file_size);
+// #if LOG
+//   Console.WriteLine("Size is %ld bytes.", file_size);
 // #endif
 //   if (file_size > MAX_FILE_SIZE) {
 //     fclose(f);
-//     printf("%25s %10ld [skipped, file too big]\n", name, file_size);
+//     Console.WriteLine("%25s %10ld [skipped, file too big]", name, file_size);
 //     return;
 //   }
 //
@@ -309,35 +324,35 @@
 //   fclose(f);
 //   if (read != file_size) {
 //     free(file_buffer);
-//     printf("Error: only read %ld bytes!\n", read);
+//     Console.WriteLine("Error: only read %ld bytes!", read);
 //     exit(1);
 //   }
 //
-// #ifdef LOG
-//   printf("Compressing. Please wait...\n");
+// #if LOG
+//   Console.WriteLine("Compressing. Please wait...");
 // #endif
 //   uint8_t* compressed_buffer = malloc(1.05 * file_size);
 //   int compressed_size = fastlz_compress_level(2, file_buffer, file_size, compressed_buffer);
 //   double ratio = (100.0 * compressed_size) / file_size;
-// #ifdef LOG
-//   printf("Compressing was completed: %ld -> %ld (%.2f%%)\n", file_size, compressed_size, ratio);
+// #if LOG
+//   Console.WriteLine("Compressing was completed: %ld -> %ld (%.2f%%)", file_size, compressed_size, ratio);
 // #endif
 //
-// #ifdef LOG
-//   printf("Decompressing. Please wait...\n");
+// #if LOG
+//   Console.WriteLine("Decompressing. Please wait...");
 // #endif
 //   uint8_t* uncompressed_buffer = malloc(file_size);
 //   if (uncompressed_buffer == NULL) {
 //     free(file_buffer);
 //     free(compressed_buffer);
-//     printf("%25s %10ld  -> %10d  (%.2f%%)  skipped, can't decompress OOM\n", name, file_size, compressed_size, ratio);
+//     Console.WriteLine("%25s %10ld  -> %10d  (%.2f%%)  skipped, can't decompress OOM", name, file_size, compressed_size, ratio);
 //     exit(1);
 //     return;
 //   }
 //   memset(uncompressed_buffer, '-', file_size);
 //   fastlz_decompress(compressed_buffer, compressed_size, uncompressed_buffer, file_size);
-// #ifdef LOG
-//   printf("Comparing. Please wait...\n");
+// #if LOG
+//   Console.WriteLine("Comparing. Please wait...");
 // #endif
 //   int result = compare(file_name, file_buffer, uncompressed_buffer, file_size);
 //   if (result == 1) {
@@ -348,111 +363,86 @@
 //   free(file_buffer);
 //   free(compressed_buffer);
 //   free(uncompressed_buffer);
-// #ifdef LOG
-//   printf("OK.\n");
+// #if LOG
+//   Console.WriteLine("OK.");
 // #else
-//   printf("%25s %10ld  -> %10d  (%.2f%%)\n", name, file_size, compressed_size, ratio);
+//   Console.WriteLine("%25s %10ld  -> %10d  (%.2f%%)", name, file_size, compressed_size, ratio);
 // #endif
 // }
 //
-// int main(int argc, char** argv) {
-//   const char* default_prefix = "../compression-corpus/";
-//   const char* names[] = {"canterbury/alice29.txt",
-//                          "canterbury/asyoulik.txt",
-//                          "canterbury/cp.html",
-//                          "canterbury/fields.c",
-//                          "canterbury/grammar.lsp",
-//                          "canterbury/kennedy.xls",
-//                          "canterbury/lcet10.txt",
-//                          "canterbury/plrabn12.txt",
-//                          "canterbury/ptt5",
-//                          "canterbury/sum",
-//                          "canterbury/xargs.1",
-//                          "silesia/dickens",
-//                          "silesia/mozilla",
-//                          "silesia/mr",
-//                          "silesia/nci",
-//                          "silesia/ooffice",
-//                          "silesia/osdb",
-//                          "silesia/reymont",
-//                          "silesia/samba",
-//                          "silesia/sao",
-//                          "silesia/webster",
-//                          "silesia/x-ray",
-//                          "silesia/xml",
-//                          "enwik/enwik8.txt"};
-//
-//   const char* prefix = (argc == 2) ? argv[1] : default_prefix;
-//
-//   const int count = sizeof(names) / sizeof(names[0]);
-//   int i;
-//
-//   printf("Test reference decompressor for Level 1\n\n");
-//   for (i = 0; i < count; ++i) {
-//     const char* name = names[i];
-//     char* filename = malloc(strlen(prefix) + strlen(name) + 1);
-//     strcpy(filename, prefix);
-//     strcat(filename, name);
-//     test_ref_decompressor_level1(name, filename);
-//     free(filename);
-//   }
-//   printf("\n");
-//
-//   printf("Test reference decompressor for Level 2\n\n");
-//   for (i = 0; i < count; ++i) {
-//     const char* name = names[i];
-//     char* filename = malloc(strlen(prefix) + strlen(name) + 1);
-//     strcpy(filename, prefix);
-//     strcat(filename, name);
-//     test_ref_decompressor_level2(name, filename);
-//     free(filename);
-//   }
-//   printf("\n");
-//
-//   printf("Test round-trip for Level 1\n\n");
-//   for (i = 0; i < count; ++i) {
-//     const char* name = names[i];
-//     char* filename = malloc(strlen(prefix) + strlen(name) + 1);
-//     strcpy(filename, prefix);
-//     strcat(filename, name);
-//     test_roundtrip_level1(name, filename);
-//     free(filename);
-//   }
-//   printf("\n");
-//
-//   printf("Test round-trip for Level 2\n\n");
-//   for (i = 0; i < count; ++i) {
-//     const char* name = names[i];
-//     char* filename = malloc(strlen(prefix) + strlen(name) + 1);
-//     strcpy(filename, prefix);
-//     strcat(filename, name);
-//     test_roundtrip_level2(name, filename);
-//     free(filename);
-//   }
-//   printf("\n");
-//
-//   return 0;
-// }
 
-using NUnit.Framework;
 
-namespace DotFastLZ.Compression.Tests;
-
-public class RoundtripTests
-{
     [SetUp]
     public void Setup()
     {
+        _names = new[]
+        {
+            "canterbury/alice29.txt",
+            "canterbury/asyoulik.txt",
+            "canterbury/cp.html",
+            "canterbury/fields.c",
+            "canterbury/grammar.lsp",
+            "canterbury/kennedy.xls",
+            "canterbury/lcet10.txt",
+            "canterbury/plrabn12.txt",
+            "canterbury/ptt5",
+            "canterbury/sum",
+            "canterbury/xargs.1",
+            "silesia/dickens",
+            "silesia/mozilla",
+            "silesia/mr",
+            "silesia/nci",
+            "silesia/ooffice",
+            "silesia/osdb",
+            "silesia/reymont",
+            "silesia/samba",
+            "silesia/sao",
+            "silesia/webster",
+            "silesia/x-ray",
+            "silesia/xml",
+            "enwik/enwik8.txt"
+        };
     }
 
     [Test]
-    public void Test1()
+    public void TestRoundtrip()
     {
-        Assert.Pass();
-    }
+        const string prefix = "../compression-corpus/";
 
-    public void TestRoundtripLevel1(string name)
-    {
-        
+        Console.WriteLine("Test reference decompressor for Level 1");
+        foreach (var name in _names)
+        {
+            var filename = prefix + name;
+            // test_ref_decompressor_level1(name, filename);
+        }
+
+        Console.WriteLine("");
+
+        Console.WriteLine("Test reference decompressor for Level 2");
+        foreach (var name in _names)
+        {
+            var filename = prefix + name;
+            // test_ref_decompressor_level2(name, filename);
+        }
+
+        Console.WriteLine("");
+
+        Console.WriteLine("Test round-trip for Level 1");
+        foreach (var name in _names)
+        {
+            var filename = prefix + name;
+            //   test_roundtrip_level1(name, filename);
+        }
+
+        Console.WriteLine("");
+
+        Console.WriteLine("Test round-trip for Level 2");
+        foreach (var name in _names)
+        {
+            var filename = prefix + name;
+            //   test_roundtrip_level2(name, filename);
+        }
+
+        Console.WriteLine("");
     }
 }
