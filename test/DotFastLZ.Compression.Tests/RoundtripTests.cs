@@ -22,23 +22,6 @@
   THE SOFTWARE.
 */
 
-// #include <stdint.h>
-// #include <stdio.h>
-// #include <stdlib.h>
-// #include <string.h>
-//
-// #include "fastlz.h"
-//
-// /*
-//  * Workaround for DJGPP to find uint8_t, uint16_t, etc.
-//  */
-// #if defined(__MSDOS__) && defined(__GNUC__)
-// #include <stdint-gcc.h>
-// #endif
-//
-// #define LOG
-// #undef LOG
-//
 // int compare(const char* name, const uint8_t* a, const uint8_t* b, int size) {
 //   int bad = 0;
 //   int i;
@@ -466,5 +449,10 @@ public class RoundtripTests
     public void Test1()
     {
         Assert.Pass();
+    }
+
+    public void TestRoundtripLevel1(string name)
+    {
+        
     }
 }
