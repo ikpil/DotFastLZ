@@ -23,6 +23,7 @@
 */
 
 using System;
+using System.IO;
 using NUnit.Framework;
 
 namespace DotFastLZ.Compression.Tests;
@@ -34,105 +35,85 @@ public class RoundtripTests
 
     private string[] _names;
 
-    // int compare(const char* name, const uint8_t* a, const uint8_t* b, int size) {
-//   int bad = 0;
-//   int i;
-//   for (i = 0; i < size; ++i) {
-//     if (a[i] != b[i]) {
-//       bad = 1;
-//       Console.WriteLine("Error on %s!", name);
-//       Console.WriteLine("Different at index %d: expecting %02x,actual %02x", i, a[i], b[i]);
-//       break;
-//     }
-//   }
-//   return bad;
-// }
-//
-//
-// /* prototype, implemented in refimpl.c */
-// void REF_Level1_decompress(const uint8_t* input, int length, uint8_t* output);
-// void REF_Level2_decompress(const uint8_t* input, int length, uint8_t* output);
-//
-/*
-  Same as test_roundtrip_level1 EXCEPT that the decompression is carried out
-  using the highly-simplified, unoptimized vanilla reference decompressor.
-*/
-    private void test_ref_decompressor_level1(string name, string file_name)
+    private long compare(string name, byte[] a, byte[] b, long size)
     {
-// #if LOG
-//     Console.WriteLine("Processing %s...", name);
-// #endif
-//         FILE* f = fopen(file_name, "rb");
-//         if (!f)
-//         {
-//             Console.WriteLine("Error: can not open %s!", file_name);
-//             exit(1);
-//         }
-//
-//         fseek(f, 0L, SEEK_END);
-//         long file_size = ftell(f);
-//         rewind(f);
-//
-// #if LOG
-//     Console.WriteLine("Size is %ld bytes.", file_size);
-// #endif
-//         if (file_size > MAX_FILE_SIZE)
-//         {
-//             fclose(f);
-//             Console.WriteLine("%25s %10ld [skipped, file too big]", name, file_size);
-//             return;
-//         }
-//
-//         uint8_t* file_buffer = malloc(file_size);
-//         long read = fread(file_buffer, 1, file_size, f);
-//         fclose(f);
-//         if (read != file_size)
-//         {
-//             free(file_buffer);
-//             Console.WriteLine("Error: only read %ld bytes!", read);
-//             exit(1);
-//         }
-//
-// #if LOG
-//     Console.WriteLine("Compressing. Please wait...");
-// #endif
-//         uint8_t* compressed_buffer = malloc(1.05 * file_size);
-//         int compressed_size = fastlz_compress_level(1, file_buffer, file_size, compressed_buffer);
-//         double ratio = (100.0 * compressed_size) / file_size;
-// #if LOG
-//     Console.WriteLine("Compressing was completed: %ld -> %ld (%.2f%%)", file_size, compressed_size, ratio);
-// #endif
-//
-// #if LOG
-//     Console.WriteLine("Decompressing. Please wait...");
-// #endif
-//         uint8_t* uncompressed_buffer = malloc(file_size);
-//         if (uncompressed_buffer == NULL)
-//         {
-//             Console.WriteLine("%25s %10ld  -> %10d  (%.2f%%)  skipped, can't decompress", name, file_size, compressed_size, ratio);
-//             return;
-//         }
-//
-//         memset(uncompressed_buffer, '-', file_size);
-//         REF_Level1_decompress(compressed_buffer, compressed_size, uncompressed_buffer);
-// #if LOG
-//     Console.WriteLine("Comparing. Please wait...");
-// #endif
-//         int result = compare(file_name, file_buffer, uncompressed_buffer, file_size);
-//         if (result == 1)
-//         {
-//             free(uncompressed_buffer);
-//             exit(1);
-//         }
-//
-//         free(file_buffer);
-//         free(compressed_buffer);
-//         free(uncompressed_buffer);
-// #if LOG
-//     Console.WriteLine("OK.");
-// #else
-//         Console.WriteLine("%25s %10ld  -> %10d  (%.2f%%)", name, file_size, compressed_size, ratio);
-// #endif
+        for (long i = 0; i < size; ++i)
+        {
+            if (a[i] != b[i])
+            {
+                Console.WriteLine($"Error on {name}!");
+                Console.WriteLine($"Different at index {i}: expecting {a[i]},actual {b[i]}");
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+
+    // /* prototype, implemented in refimpl.c */
+    // void REF_Level1_decompress(const uint8_t* input, int length, uint8_t* output);
+    // void REF_Level2_decompress(const uint8_t* input, int length, uint8_t* output);
+    //
+    /*
+      Same as test_roundtrip_level1 EXCEPT that the decompression is carried out
+      using the highly-simplified, unoptimized vanilla reference decompressor.
+    */
+    private bool test_ref_decompressor_level1(string name, string file_name)
+    {
+        Console.WriteLine($"Processing {name}...");
+        if (!File.Exists(file_name))
+        {
+            Console.WriteLine("Error: can not open %s!", file_name);
+            return false;
+        }
+
+        var fileInfo = new FileInfo(file_name);
+        var file_size = fileInfo.Length;
+        Console.WriteLine($"Size is {file_size} bytes.");
+
+        if (file_size > MAX_FILE_SIZE)
+        {
+            Console.WriteLine($"{name} {file_size} [skipped, file too big]");
+            return false;
+        }
+
+        using var fs = new FileStream(file_name, FileMode.Open, FileAccess.Read, FileShare.Read);
+        byte[] file_buffer = new byte[file_size];
+        int read = fs.Read(file_buffer, 0, file_buffer.Length);
+
+        if (read != file_size)
+        {
+            Console.WriteLine($"Error: only read {read} bytes!");
+            return false;
+        }
+
+        Console.WriteLine("Compressing. Please wait...");
+        byte[] compressed_buffer = new byte[(int)(1.05 * file_size)];
+        int compressed_size = 0; // fastlz_compress_level(1, file_buffer, file_size, compressed_buffer);
+        double ratio = (100.0 * compressed_size) / file_size;
+        Console.WriteLine($"Compressing was completed: {file_size} -> {compressed_size} ({ratio})");
+
+        Console.WriteLine("Decompressing. Please wait...");
+        byte[] uncompressed_buffer = new byte[file_size];
+        if (null == uncompressed_buffer)
+        {
+            Console.WriteLine($"{name} {file_size} -> {compressed_size}  ({ratio})  skipped, can't decompress");
+            return false;
+        }
+
+        Array.Fill(uncompressed_buffer, (byte)'-');
+        //REF_Level1_decompress(compressed_buffer, compressed_size, uncompressed_buffer);
+
+        Console.WriteLine("Comparing. Please wait...");
+        long result = compare(file_name, file_buffer, uncompressed_buffer, file_size);
+        if (0 <= result)
+        {
+            return false;
+        }
+
+        Console.WriteLine($"{name} {file_size} -> {compressed_size} ({ratio})");
+        return true;
     }
 
 //
@@ -413,7 +394,7 @@ public class RoundtripTests
         foreach (var name in _names)
         {
             var filename = prefix + name;
-            // test_ref_decompressor_level1(name, filename);
+            test_ref_decompressor_level1(name, filename);
         }
 
         Console.WriteLine("");
