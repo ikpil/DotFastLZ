@@ -210,49 +210,42 @@ public class RoundtripTests
         }
 
         using var fs = new FileStream(file_name, FileMode.Open, FileAccess.Read, FileShare.Read);
+        byte[] file_buffer = new byte[file_size];
+        int read = fs.Read(file_buffer, 0, file_buffer.Length);
+        if (read != file_size)
+        {
+            Console.WriteLine($"Error: only read {read} bytes!");
+            return false;
+        }
 
+        Console.WriteLine("Compressing. Please wait...");
 
-        // -----
+        byte[] compressed_buffer = new byte[(int)(1.05 * file_size)];
+        int compressed_size = FastLZ.Compress(file_buffer, 0, (int)file_size, compressed_buffer, 0, 1);
+        double ratio = (100.0 * compressed_size) / file_size;
+        Console.WriteLine($"Compressing was completed: {file_size} -> {compressed_size} ({ratio})");
 
-        // uint8_t* file_buffer = malloc(file_size);
-        // long read = fread(file_buffer, 1, file_size, f);
-        // fclose(f);
-        // if (read != file_size)
-        // {
-        //     free(file_buffer);
-        //     Console.WriteLine("Error: only read %ld bytes!", read);
-        //     exit(1);
-        // }
-        //
-        // Console.WriteLine("Compressing. Please wait...");
-        // uint8_t* compressed_buffer = malloc(1.05 * file_size);
-        // int compressed_size = fastlz_compress_level(1, file_buffer, file_size, compressed_buffer);
-        // double ratio = (100.0 * compressed_size) / file_size;
-        // Console.WriteLine("Compressing was completed: %ld -> %ld (%.2f%%)", file_size, compressed_size, ratio);
-        //
-        // Console.WriteLine("Decompressing. Please wait...");
-        // uint8_t* uncompressed_buffer = malloc(file_size);
-        // if (uncompressed_buffer == NULL)
-        // {
-        //     Console.WriteLine("%25s %10ld  -> %10d  (%.2f%%)  skipped, can't decompress", name, file_size, compressed_size, ratio);
-        //     return;
-        // }
-        //
-        // memset(uncompressed_buffer, '-', file_size);
+        Console.WriteLine("Decompressing. Please wait...");
+        byte[] uncompressed_buffer = new byte[file_size];
+        if (null == uncompressed_buffer)
+        {
+            Console.WriteLine($"{name} {file_size} -> {compressed_size}  ({ratio})  skipped, can't decompress");
+            return false;
+        }
+
+        Array.Fill(uncompressed_buffer, (byte)'-');
+
         // fastlz_decompress(compressed_buffer, compressed_size, uncompressed_buffer, file_size);
-        //
-        // Console.WriteLine("Comparing. Please wait...");
-        // int result = compare(file_name, file_buffer, uncompressed_buffer, file_size);
-        // if (result == 1)
-        // {
-        //     free(uncompressed_buffer);
-        //     exit(1);
-        // }
-        //
-        // free(file_buffer);
-        // free(compressed_buffer);
-        // free(uncompressed_buffer);
-        // Console.WriteLine("%25s %10ld  -> %10d  (%.2f%%)", name, file_size, compressed_size, ratio);
+
+        Console.WriteLine("Comparing. Please wait...");
+        long result = compare(file_name, file_buffer, uncompressed_buffer, file_size);
+        if (0 <= result)
+        {
+            return false;
+        }
+
+        Console.WriteLine($"{name} {file_size} -> {compressed_size} ({ratio})");
+
         return false;
     }
 
