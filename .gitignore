@@ -8,6 +8,7 @@ _ReSharper.*/
 .idea/
 *.sln.iml
 packages/
+resources/compression-corpus/
 artifacts/
 PublishProfiles/
 *.user

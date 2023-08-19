@@ -22,4 +22,5 @@
     <ProjectReference Include="..\..\src\DotFastLZ.Compression\DotFastLZ.Compression.csproj" />
   </ItemGroup>
 
+
 </Project>
