@@ -40,6 +40,11 @@ public class SourceZip
     {
         var zipFilePath = ResourceHelper.Find(_fileName);
         var directoryName = Path.GetDirectoryName(zipFilePath);
+        if (null == directoryName)
+        {
+            throw new DirectoryNotFoundException($"not found directoryName - {zipFilePath}");
+        }
+
         var extractPath = Path.Combine(directoryName, extractRootPath, _extractPath);
         ResourceHelper.ExtractZipFile(zipFilePath, extractPath);
     }
