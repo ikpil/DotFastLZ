@@ -83,7 +83,7 @@ public static class TestHelper
         }
 
         Array.Fill(uncompressed_buffer, (byte)'-');
-        //REF_Level1_decompress(compressed_buffer, compressed_size, uncompressed_buffer);
+        FastLZ.Decompress(compressed_buffer, 0, compressed_buffer.Length, uncompressed_buffer, 0, uncompressed_buffer.Length);
 
         Console.WriteLine("Comparing. Please wait...");
         long result = ResourceHelper.Compare(file_name, file_buffer, uncompressed_buffer, file_size);
@@ -149,8 +149,8 @@ public static class TestHelper
 
         /* intentionally mask out the block tag */
         compressed_buffer[0] = (byte)(compressed_buffer[0] & 31);
-
-        //REF_Level2_decompress(compressed_buffer, compressed_size, uncompressed_buffer);
+        
+        FastLZ.Decompress(compressed_buffer, 0, compressed_buffer.Length, uncompressed_buffer, 0, uncompressed_buffer.Length);
 
         Console.WriteLine("Comparing. Please wait...");
         long result = ResourceHelper.Compare(file_name, file_buffer, uncompressed_buffer, file_size);
@@ -216,7 +216,7 @@ public static class TestHelper
 
         Array.Fill(uncompressed_buffer, (byte)'-');
 
-        // fastlz_decompress(compressed_buffer, compressed_size, uncompressed_buffer, file_size);
+        FastLZ.Decompress(compressed_buffer, 0, compressed_buffer.Length, uncompressed_buffer, 0, uncompressed_buffer.Length);
 
         Console.WriteLine("Comparing. Please wait...");
         long result = ResourceHelper.Compare(file_name, file_buffer, uncompressed_buffer, file_size);
@@ -282,7 +282,7 @@ public static class TestHelper
 
         Array.Fill(uncompressed_buffer, (byte)'-');
 
-        // fastlz_decompress(compressed_buffer, compressed_size, uncompressed_buffer, file_size);
+        FastLZ.Decompress(compressed_buffer, 0, compressed_buffer.Length, uncompressed_buffer, 0, uncompressed_buffer.Length);
 
         Console.WriteLine("Comparing. Please wait...");
         long result = ResourceHelper.Compare(file_name, file_buffer, uncompressed_buffer, file_size);

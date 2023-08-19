@@ -60,28 +60,28 @@ namespace DotFastLZ.Compression
         private const int MIN_LENGTH_TO_COMPRESSION = 32;
 
         /**
-     * In this case {@link #Compress(byte[], int, int, byte[], int, int)} will choose level
-     * automatically depending on the length of the input buffer. If length less than
-     * {@link #MIN_RECOMENDED_LENGTH_FOR_LEVEL_2} {@link #LEVEL_1} will be choosen,
-     * otherwise {@link #LEVEL_2}.
-     */
+         * In this case {@link #Compress(byte[], int, int, byte[], int, int)} will choose level
+         * automatically depending on the length of the input buffer. If length less than
+         * {@link #MIN_RECOMENDED_LENGTH_FOR_LEVEL_2} {@link #LEVEL_1} will be choosen,
+         * otherwise {@link #LEVEL_2}.
+         */
         private const int LEVEL_AUTO = 0;
 
         /**
-     * Level 1 is the fastest compression and generally useful for short data.
-     */
+         * Level 1 is the fastest compression and generally useful for short data.
+         */
         private const int LEVEL_1 = 1;
 
         /**
-     * Level 2 is slightly slower but it gives better compression ratio.
-     */
+         * Level 2 is slightly slower but it gives better compression ratio.
+         */
         private const int LEVEL_2 = 2;
 
         /**
-     * The output buffer must be at least 6% larger than the input buffer and can not be smaller than 66 bytes.
-     * @param inputLength length of input buffer
-     * @return Maximum output buffer length
-     */
+         * The output buffer must be at least 6% larger than the input buffer and can not be smaller than 66 bytes.
+         * @param inputLength length of input buffer
+         * @return Maximum output buffer length
+         */
         public static int CalculateOutputBufferLength(int inputLength)
         {
             int tempOutputLength = (int)(inputLength * 1.06);
@@ -94,8 +94,7 @@ namespace DotFastLZ.Compression
      *
      * If the input is not compressible, the return value might be larger than length (input buffer size).
      */
-        public static int Compress(byte[] input, int inOffset, int inLength,
-            byte[] output, int outOffset, int proposedLevel)
+        public static int Compress(byte[] input, int inOffset, int inLength, byte[] output, int outOffset, int proposedLevel)
         {
             int level;
             if (proposedLevel == LEVEL_AUTO)
@@ -507,8 +506,7 @@ namespace DotFastLZ.Compression
      * Decompression is memory safe and guaranteed not to write the output buffer
      * more than what is specified in outLength.
      */
-        public static int Decompress(byte[] input, int inOffset, int inLength,
-            byte[] output, int outOffset, int outLength)
+        public static int Decompress(byte[] input, int inOffset, int inLength, byte[] output, int outOffset, int outLength)
         {
             //int level = ((*(const flzuint8*)input) >> 5) + 1;
             int level = (input[inOffset] >> 5) + 1;

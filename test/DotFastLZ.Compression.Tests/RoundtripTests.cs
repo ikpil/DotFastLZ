@@ -80,7 +80,7 @@ public class RoundtripTests
     }
 
     [Test]
-    public void TestRoundtrip()
+    public void TestRefDecompressorLevel1()
     {
         Console.WriteLine("Test reference decompressor for Level 1");
         foreach (var name in _names)
@@ -89,9 +89,11 @@ public class RoundtripTests
             bool result = TestHelper.test_ref_decompressor_level1(name, filename);
             Assert.That(result, Is.EqualTo(true), $"test_ref_decompressor_level1({name}, {filename})");
         }
+    }
 
-        Console.WriteLine("");
-
+    [Test]
+    public void TestRefDecompressorLevel2()
+    {
         Console.WriteLine("Test reference decompressor for Level 2");
         foreach (var name in _names)
         {
@@ -99,9 +101,12 @@ public class RoundtripTests
             bool result = TestHelper.test_ref_decompressor_level2(name, filename);
             Assert.That(result, Is.EqualTo(true), $"test_ref_decompressor_level2({name}, {filename})");
         }
+    }
 
-        Console.WriteLine("");
 
+    [Test]
+    public void TestRoundtripLevel1()
+    {
         Console.WriteLine("Test round-trip for Level 1");
         foreach (var name in _names)
         {
@@ -109,9 +114,11 @@ public class RoundtripTests
             bool result = TestHelper.test_roundtrip_level1(name, filename);
             Assert.That(result, Is.EqualTo(true), $"test_roundtrip_level1({name}, {filename})");
         }
+    }
 
-        Console.WriteLine("");
-
+    [Test]
+    public void TestRoundtripLevel2()
+    {
         Console.WriteLine("Test round-trip for Level 2");
         foreach (var name in _names)
         {
@@ -119,7 +126,5 @@ public class RoundtripTests
             var result = TestHelper.test_roundtrip_level2(name, filename);
             Assert.That(result, Is.EqualTo(true), $"test_roundtrip_level2({name}, {filename})");
         }
-
-        Console.WriteLine("");
     }
 }
