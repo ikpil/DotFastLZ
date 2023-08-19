@@ -24,13 +24,17 @@
 */
 
 using System;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using DotFastLZ.Compression.Tests.Fixtures;
 using NUnit.Framework;
 
 namespace DotFastLZ.Compression.Tests;
 
 public class RoundtripTests
 {
+    private const string Prefix = "compression-corpus";
     private const int MAX_FILE_SIZE = 100 * 1024 * 1024;
     //private const int MAX_FILE_SIZE = 32 * 1024 * 1024;
 
@@ -350,12 +354,22 @@ public class RoundtripTests
     [Test]
     public void TestRoundtrip()
     {
-        const string prefix = "../compression-corpus/";
+        var sourceZipFiles = new[]
+        {
+            new SourceZip("canterburycorpus.zip", "canterbury"),
+            new SourceZip("silesia.zip", "silesia"),
+            new SourceZip("enwik8.zip", "enwik"),
+        };
+
+        foreach (var sourceZip in sourceZipFiles)
+        {
+            sourceZip.Extract(Prefix);
+        }
 
         Console.WriteLine("Test reference decompressor for Level 1");
         foreach (var name in _names)
         {
-            var filename = prefix + name;
+            var filename = ResourceHelper.Find(Path.Combine(Prefix, name));
             test_ref_decompressor_level1(name, filename);
         }
 
@@ -364,7 +378,7 @@ public class RoundtripTests
         Console.WriteLine("Test reference decompressor for Level 2");
         foreach (var name in _names)
         {
-            var filename = prefix + name;
+            var filename = ResourceHelper.Find(Path.Combine(Prefix, name));
             test_ref_decompressor_level2(name, filename);
         }
 
@@ -373,7 +387,7 @@ public class RoundtripTests
         Console.WriteLine("Test round-trip for Level 1");
         foreach (var name in _names)
         {
-            var filename = prefix + name;
+            var filename = ResourceHelper.Find(Path.Combine(Prefix, name));
             test_roundtrip_level1(name, filename);
         }
 
@@ -382,7 +396,7 @@ public class RoundtripTests
         Console.WriteLine("Test round-trip for Level 2");
         foreach (var name in _names)
         {
-            var filename = prefix + name;
+            var filename = ResourceHelper.Find(Path.Combine(Prefix, name));
             test_roundtrip_level2(name, filename);
         }
 
