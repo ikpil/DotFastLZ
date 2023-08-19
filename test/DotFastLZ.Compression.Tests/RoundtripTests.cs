@@ -255,79 +255,70 @@ public class RoundtripTests
       Decompress the output with Level 2 decompressor.
       Compare the result with the original file content.
     */
-// void test_roundtrip_level2(const char* name, const char* file_name) {
-// #if LOG
-//   Console.WriteLine("Processing %s...", name);
-// #endif
-//   FILE* f = fopen(file_name, "rb");
-//   if (!f) {
-//     Console.WriteLine("Error: can not open %s!", file_name);
-//     exit(1);
-//   }
-//   fseek(f, 0L, SEEK_END);
-//   long file_size = ftell(f);
-//   rewind(f);
-//
-// #if LOG
-//   Console.WriteLine("Size is %ld bytes.", file_size);
-// #endif
-//   if (file_size > MAX_FILE_SIZE) {
-//     fclose(f);
-//     Console.WriteLine("%25s %10ld [skipped, file too big]", name, file_size);
-//     return;
-//   }
-//
-//   uint8_t* file_buffer = malloc(file_size);
-//   long read = fread(file_buffer, 1, file_size, f);
-//   fclose(f);
-//   if (read != file_size) {
-//     free(file_buffer);
-//     Console.WriteLine("Error: only read %ld bytes!", read);
-//     exit(1);
-//   }
-//
-// #if LOG
-//   Console.WriteLine("Compressing. Please wait...");
-// #endif
-//   uint8_t* compressed_buffer = malloc(1.05 * file_size);
-//   int compressed_size = fastlz_compress_level(2, file_buffer, file_size, compressed_buffer);
-//   double ratio = (100.0 * compressed_size) / file_size;
-// #if LOG
-//   Console.WriteLine("Compressing was completed: %ld -> %ld (%.2f%%)", file_size, compressed_size, ratio);
-// #endif
-//
-// #if LOG
-//   Console.WriteLine("Decompressing. Please wait...");
-// #endif
-//   uint8_t* uncompressed_buffer = malloc(file_size);
-//   if (uncompressed_buffer == NULL) {
-//     free(file_buffer);
-//     free(compressed_buffer);
-//     Console.WriteLine("%25s %10ld  -> %10d  (%.2f%%)  skipped, can't decompress OOM", name, file_size, compressed_size, ratio);
-//     exit(1);
-//     return;
-//   }
-//   memset(uncompressed_buffer, '-', file_size);
-//   fastlz_decompress(compressed_buffer, compressed_size, uncompressed_buffer, file_size);
-// #if LOG
-//   Console.WriteLine("Comparing. Please wait...");
-// #endif
-//   int result = compare(file_name, file_buffer, uncompressed_buffer, file_size);
-//   if (result == 1) {
-//     free(uncompressed_buffer);
-//     exit(1);
-//   }
-//
-//   free(file_buffer);
-//   free(compressed_buffer);
-//   free(uncompressed_buffer);
-// #if LOG
-//   Console.WriteLine("OK.");
-// #else
-//   Console.WriteLine("%25s %10ld  -> %10d  (%.2f%%)", name, file_size, compressed_size, ratio);
-// #endif
-// }
-//
+    void test_roundtrip_level2(string name, string file_name)
+    {
+        // Console.WriteLine("Processing %s...", name);
+        // FILE* f = fopen(file_name, "rb");
+        // if (!f)
+        // {
+        //     Console.WriteLine("Error: can not open %s!", file_name);
+        //     exit(1);
+        // }
+        //
+        // fseek(f, 0L, SEEK_END);
+        // long file_size = ftell(f);
+        // rewind(f);
+        //
+        // Console.WriteLine("Size is %ld bytes.", file_size);
+        // if (file_size > MAX_FILE_SIZE)
+        // {
+        //     fclose(f);
+        //     Console.WriteLine("%25s %10ld [skipped, file too big]", name, file_size);
+        //     return;
+        // }
+        //
+        // uint8_t* file_buffer = malloc(file_size);
+        // long read = fread(file_buffer, 1, file_size, f);
+        // fclose(f);
+        // if (read != file_size)
+        // {
+        //     free(file_buffer);
+        //     Console.WriteLine("Error: only read %ld bytes!", read);
+        //     exit(1);
+        // }
+        //
+        // Console.WriteLine("Compressing. Please wait...");
+        // uint8_t* compressed_buffer = malloc(1.05 * file_size);
+        // int compressed_size = fastlz_compress_level(2, file_buffer, file_size, compressed_buffer);
+        // double ratio = (100.0 * compressed_size) / file_size;
+        // Console.WriteLine("Compressing was completed: %ld -> %ld (%.2f%%)", file_size, compressed_size, ratio);
+        //
+        // Console.WriteLine("Decompressing. Please wait...");
+        // uint8_t* uncompressed_buffer = malloc(file_size);
+        // if (uncompressed_buffer == NULL)
+        // {
+        //     free(file_buffer);
+        //     free(compressed_buffer);
+        //     Console.WriteLine("%25s %10ld  -> %10d  (%.2f%%)  skipped, can't decompress OOM", name, file_size, compressed_size, ratio);
+        //     exit(1);
+        //     return;
+        // }
+        //
+        // memset(uncompressed_buffer, '-', file_size);
+        // fastlz_decompress(compressed_buffer, compressed_size, uncompressed_buffer, file_size);
+        // Console.WriteLine("Comparing. Please wait...");
+        // int result = compare(file_name, file_buffer, uncompressed_buffer, file_size);
+        // if (result == 1)
+        // {
+        //     free(uncompressed_buffer);
+        //     exit(1);
+        // }
+        //
+        // free(file_buffer);
+        // free(compressed_buffer);
+        // free(uncompressed_buffer);
+        // Console.WriteLine("%25s %10ld  -> %10d  (%.2f%%)", name, file_size, compressed_size, ratio);
+    }
 
 
     [SetUp]
