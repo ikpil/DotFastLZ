@@ -113,6 +113,7 @@ public class RoundtripTests
         long result = compare(file_name, file_buffer, uncompressed_buffer, file_size);
         if (0 <= result)
         {
+            Console.WriteLine($"failed to compare - {name} index({result})");
             return false;
         }
 
@@ -180,6 +181,7 @@ public class RoundtripTests
         long result = compare(file_name, file_buffer, uncompressed_buffer, file_size);
         if (0 <= result)
         {
+            Console.WriteLine($"failed to compare - {name} index({result})");
             return false;
         }
 
@@ -245,6 +247,7 @@ public class RoundtripTests
         long result = compare(file_name, file_buffer, uncompressed_buffer, file_size);
         if (0 <= result)
         {
+            Console.WriteLine($"failed to compare - {name} index({result})");
             return false;
         }
 
@@ -310,6 +313,7 @@ public class RoundtripTests
         long result = compare(file_name, file_buffer, uncompressed_buffer, file_size);
         if (0 <= result)
         {
+            Console.WriteLine($"failed to compare - {name} index({result})");
             return false;
         }
 
@@ -347,13 +351,14 @@ public class RoundtripTests
             "silesia/webster",
             "silesia/x-ray",
             "silesia/xml",
-            "enwik/enwik8.txt"
+            "enwik/enwik8"
         };
     }
 
-    [Test]
-    public void TestRoundtrip()
+    [SetUp]
+    public void OnSetUp()
     {
+        // ready zip files
         var sourceZipFiles = new[]
         {
             new SourceZip("canterburycorpus.zip", "canterbury"),
@@ -361,16 +366,22 @@ public class RoundtripTests
             new SourceZip("enwik8.zip", "enwik"),
         };
 
+        // extract source files
         foreach (var sourceZip in sourceZipFiles)
         {
             sourceZip.Extract(Prefix);
         }
+    }
 
+    [Test]
+    public void TestRoundtrip()
+    {
         Console.WriteLine("Test reference decompressor for Level 1");
         foreach (var name in _names)
         {
             var filename = ResourceHelper.Find(Path.Combine(Prefix, name));
-            test_ref_decompressor_level1(name, filename);
+            bool result = test_ref_decompressor_level1(name, filename);
+            Assert.That(result, Is.EqualTo(true), $"test_ref_decompressor_level1({name}, {filename})");
         }
 
         Console.WriteLine("");
@@ -379,7 +390,8 @@ public class RoundtripTests
         foreach (var name in _names)
         {
             var filename = ResourceHelper.Find(Path.Combine(Prefix, name));
-            test_ref_decompressor_level2(name, filename);
+            bool result = test_ref_decompressor_level2(name, filename);
+            Assert.That(result, Is.EqualTo(true), $"test_ref_decompressor_level2({name}, {filename})");
         }
 
         Console.WriteLine("");
@@ -388,7 +400,8 @@ public class RoundtripTests
         foreach (var name in _names)
         {
             var filename = ResourceHelper.Find(Path.Combine(Prefix, name));
-            test_roundtrip_level1(name, filename);
+            bool result = test_roundtrip_level1(name, filename);
+            Assert.That(result, Is.EqualTo(true), $"test_roundtrip_level1({name}, {filename})");
         }
 
         Console.WriteLine("");
@@ -397,7 +410,8 @@ public class RoundtripTests
         foreach (var name in _names)
         {
             var filename = ResourceHelper.Find(Path.Combine(Prefix, name));
-            test_roundtrip_level2(name, filename);
+            var result = test_roundtrip_level2(name, filename);
+            Assert.That(result, Is.EqualTo(true), $"test_roundtrip_level2({name}, {filename})");
         }
 
         Console.WriteLine("");
