@@ -29,7 +29,7 @@ using NUnit.Framework;
 
 namespace DotFastLZ.Compression.Tests;
 
-public class RoundtripTests
+public class CompressionTests
 {
     private const string Prefix = "compression-corpus";
 
