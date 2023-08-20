@@ -39,20 +39,20 @@ public static class ResourceHelper
         return buffer;
     }
 
-    public static string Find(string filename)
+    public static string Find(string pathName)
     {
-        string filePath = Path.Combine("resources", filename);
+        string path = Path.Combine("resources", pathName);
         for (int i = 0; i < 10; ++i)
         {
-            if (File.Exists(filePath))
+            if (File.Exists(path) || Directory.Exists(path))
             {
-                return Path.GetFullPath(filePath);
+                return Path.GetFullPath(path);
             }
 
-            filePath = Path.Combine("..", filePath);
+            path = Path.Combine("..", path);
         }
 
-        return Path.GetFullPath(filename);
+        return Path.GetFullPath(pathName);
     }
 
     public static int ExtractZipFile(string zipFilePath, string extractPath)
