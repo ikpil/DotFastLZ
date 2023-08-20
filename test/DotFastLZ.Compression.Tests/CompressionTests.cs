@@ -29,9 +29,20 @@ using NUnit.Framework;
 
 namespace DotFastLZ.Compression.Tests;
 
+[TestFixture]
+[Parallelizable(ParallelScope.All)]
 public class CompressionTests
 {
     private const string Prefix = "compression-corpus";
+
+    // ready zip files
+    private static readonly SourceZip[] SourceZipFiles = new[]
+    {
+        new SourceZip("canterburycorpus.zip", "canterbury"),
+        new SourceZip("silesia.zip", "silesia"),
+        new SourceZip("enwik8.zip", "enwik"),
+    };
+
 
     private string[] _names = new[]
     {
@@ -61,21 +72,24 @@ public class CompressionTests
         "enwik/enwik8"
     };
 
-    [SetUp]
+    [OneTimeSetUp]
     public void OnSetUp()
     {
-        // ready zip files
-        var sourceZipFiles = new[]
-        {
-            new SourceZip("canterburycorpus.zip", "canterbury"),
-            new SourceZip("silesia.zip", "silesia"),
-            new SourceZip("enwik8.zip", "enwik"),
-        };
-
         // extract source files
-        foreach (var sourceZip in sourceZipFiles)
+        foreach (var sourceZip in SourceZipFiles)
         {
             sourceZip.Extract(Prefix);
+        }
+    }
+
+    [OneTimeTearDown]
+    public void OnTearDown()
+    {
+        // remove
+        var path = ResourceHelper.Find(Prefix);
+        if (!string.IsNullOrEmpty(path))
+        {
+            Directory.Delete(path, true);
         }
     }
 
