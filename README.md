@@ -1,6 +1,9 @@
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![.NET](https://github.com/ikpil/DotFastLZ/actions/workflows/dotnet.yml/badge.svg)](https://github.com/ikpil/DotFastLZ/actions/workflows/dotnet.yml)
 
+## Introduction
+
+DotFastLZ is a C# port of [ariya/FastLZ](https://github.com/ariya/FastLZ) for C# projects and Unity3D.
 
 ## Overview
 
