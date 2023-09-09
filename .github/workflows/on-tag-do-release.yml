@@ -4,16 +4,16 @@ on:
     tags:
       - 'v[0-9]+\.[0-9]+\.[0-9]+'
 jobs:
-  release:
+  test:
     runs-on: ubuntu-latest
     steps:
-    - name: Run
-      run: |
-        dotnet tool install --global GitReleaseManager.Tool
-        tag="${GITHUB_REF:10}"
-        owner="${GITHUB_REPOSITORY%/*}"
-        repo="${GITHUB_REPOSITORY#*/}"
-        dotnet-gitreleasemanager create -m ${tag} --token ${{secrets.GITHUB_TOKEN}} -o ${owner} -r ${repo}
-        dotnet-gitreleasemanager close -m ${tag} --token ${{secrets.GITHUB_TOKEN}} -o ${owner} -r ${repo}
-        dotnet-gitreleasemanager publish -t ${tag} --token ${{secrets.GITHUB_TOKEN}} -o ${owner} -r ${repo}
-      shell: bash
+      - uses: actions/checkout@v2
+      - name: Set output
+        id: vars
+        run: echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
+      - name: Check output
+        env:
+          RELEASE_VERSION: ${{ steps.vars.outputs.tag }}
+        run: |
+          echo $RELEASE_VERSION
+          echo ${{ steps.vars.outputs.tag }}
