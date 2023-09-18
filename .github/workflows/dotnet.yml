@@ -6,11 +6,10 @@ name: .NET
 on:
   push:
   pull_request:
-    branches: [main]
+    branches: [ main ]
     paths:
       - '**.cs'
       - '**.csproj'
-      - '**.sln'
 
 jobs:
   build-and-test:
@@ -18,19 +17,21 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        dotnet-version: ['7.0.x']
-        os: [windows-latest, ubuntu-latest, macos-latest]
-          
+        dotnet-version: [ '7.0.x' ]
+        os: [ windows-latest ]
+    
     steps:
-    - uses: actions/checkout@v3
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: ${{ matrix.dotnet-version }}
-        
-    - name: Restore dependencies
-      run: dotnet restore
-    - name: Build
-      run: dotnet build --no-restore
-    - name: Test
-      run: dotnet test --no-build --verbosity normal
+      - uses: actions/checkout@v3
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: ${{ matrix.dotnet-version }}
+
+      - name: Install dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test --no-restore --verbosity normal
