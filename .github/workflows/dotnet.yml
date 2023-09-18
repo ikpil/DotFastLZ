@@ -5,14 +5,17 @@ name: .NET
 
 on:
   push:
-    branches: [ "main" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [main]
+    paths:
+      - '**.cs'
+      - '**.csproj'
+      - '**.sln'
 
 jobs:
   build:
-
-    runs-on: ubuntu-latest
+    name: build-and-test-${{matrix.os}}
+    runs-on: ${{ matrix.os }}
 
     steps:
     - uses: actions/checkout@v3
