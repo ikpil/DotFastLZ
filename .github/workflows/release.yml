@@ -40,7 +40,6 @@ jobs:
       - name: Zip
         working-directory: ${{ env.working-directory }}
         run: |
-          cp -rfv resources working-temp
           cd working-temp
           echo "dotnet DotFastLZ.SixPack.dll" > run.bat
           zip -r ../DotFastLZ.SixPack-${{ steps.version.outputs.version}}.zip ./
