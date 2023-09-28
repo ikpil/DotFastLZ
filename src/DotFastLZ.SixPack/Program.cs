@@ -160,6 +160,168 @@ public static class Program
         f.Write(buffer);
     }
 
+    public static int pack_file_compressed(string input_file, int method, int level, FileStream f) 
+    {        
+        ulong fsize;
+        ulong checksum;
+        string shown_name;
+        byte[] buffer = new byte[BLOCK_SIZE];
+        byte[] result = new byte[BLOCK_SIZE * 2]; /* FIXME twice is too large */
+        byte[] progress = new byte[20];
+        int c;
+        ulong percent;
+        ulong total_read;
+        ulong total_compressed;
+        int chunk_size;
+
+        /* sanity check */
+        FileStream temp;
+        try 
+        {
+            temp = new FileStream(input_file, FileMode.Open, FileAccess.Read, FileShare.Read);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Error: could not open {input_file}");
+            Console.WriteLine(e.Message);
+            return -1;
+        }
+
+        using var ifs = temp;
+
+        /* find size of the file */
+        fseek(ifs, 0, SEEK_END);
+        fsize = ftell(ifs);
+        fseek(ifs, 0, SEEK_SET);
+
+        /* already a 6pack archive? */
+        if (detect_magic(ifs)) {
+            printf("Error: file %s is already a 6pack archive!\n", input_file);
+            fclose(ifs);
+            return -1;
+        }
+
+        /* truncate directory prefix, e.g. "foo/bar/FILE.txt" becomes "FILE.txt" */
+        shown_name = input_file + strlen(input_file) - 1;
+        while (shown_name > input_file)
+            if (*(shown_name - 1) == PATH_SEPARATOR)
+            break;
+            else
+            shown_name--;
+
+        /* chunk for File Entry */
+        buffer[0] = fsize & 255;
+        buffer[1] = (fsize >> 8) & 255;
+        buffer[2] = (fsize >> 16) & 255;
+        buffer[3] = (fsize >> 24) & 255;
+        #if 0
+        buffer[4] = (fsize >> 32) & 255;
+        buffer[5] = (fsize >> 40) & 255;
+        buffer[6] = (fsize >> 48) & 255;
+        buffer[7] = (fsize >> 56) & 255;
+        #else
+        /* because fsize is only 32-bit */
+        buffer[4] = 0;
+        buffer[5] = 0;
+        buffer[6] = 0;
+        buffer[7] = 0;
+        #endif
+        buffer[8] = (strlen(shown_name) + 1) & 255;
+        buffer[9] = (strlen(shown_name) + 1) >> 8;
+        checksum = 1L;
+        checksum = update_adler32(checksum, buffer, 10);
+        checksum = update_adler32(checksum, shown_name, strlen(shown_name) + 1);
+        write_chunk_header(f, 1, 0, 10 + strlen(shown_name) + 1, checksum, 0);
+        fwrite(buffer, 10, 1, f);
+        fwrite(shown_name, strlen(shown_name) + 1, 1, f);
+        total_compressed = 16 + 10 + strlen(shown_name) + 1;
+
+        /* for progress status */
+        memset(progress, ' ', 20);
+        if (strlen(shown_name) < 16)
+            for (c = 0; c < (int)strlen(shown_name); c++) progress[c] = shown_name[c];
+        else {
+            for (c = 0; c < 13; c++) progress[c] = shown_name[c];
+            progress[13] = '.';
+            progress[14] = '.';
+            progress[15] = ' ';
+        }
+        progress[16] = '[';
+        progress[17] = 0;
+        printf("%s", progress);
+        for (c = 0; c < 50; c++) printf(".");
+        printf("]\r");
+        printf("%s", progress);
+
+        /* read file and place ifs archive */
+        total_read = 0;
+        percent = 0;
+        for (;;) {
+            int compress_method = method;
+            int last_percent = (int)percent;
+            size_t bytes_read = fread(buffer, 1, BLOCK_SIZE, ifs);
+            if (bytes_read == 0) break;
+            total_read += bytes_read;
+
+            /* for progress */
+            if (fsize < (1 << 24))
+            percent = total_read * 100 / fsize;
+            else
+            percent = total_read / 256 * 100 / (fsize >> 8);
+            percent >>= 1;
+            while (last_percent < (int)percent) {
+            printf("#");
+            last_percent++;
+            }
+
+            /* too small, don't bother to compress */
+            if (bytes_read < 32) compress_method = 0;
+
+            /* write to output */
+            switch (compress_method) {
+            /* FastLZ */
+            case 1:
+                chunk_size = fastlz_compress_level(level, buffer, bytes_read, result);
+                checksum = update_adler32(1L, result, chunk_size);
+                write_chunk_header(f, 17, 1, chunk_size, checksum, bytes_read);
+                fwrite(result, 1, chunk_size, f);
+                total_compressed += 16;
+                total_compressed += chunk_size;
+                break;
+
+            /* uncompressed, also fallback method */
+            case 0:
+            default:
+                checksum = 1L;
+                checksum = update_adler32(checksum, buffer, bytes_read);
+                write_chunk_header(f, 17, 0, bytes_read, checksum, bytes_read);
+                fwrite(buffer, 1, bytes_read, f);
+                total_compressed += 16;
+                total_compressed += bytes_read;
+                break;
+            }
+        }
+
+        fclose(ifs);
+        if (total_read != fsize) {
+            printf("\n");
+            printf("Error: reading %s failed!\n", input_file);
+            return -1;
+        } else {
+            printf("] ");
+            if (total_compressed < fsize) {
+            if (fsize < (1 << 20))
+                percent = total_compressed * 1000 / fsize;
+            else
+                percent = total_compressed / 256 * 1000 / (fsize >> 8);
+            percent = 1000 - percent;
+            printf("%2d.%d%% saved", (int)percent / 10, (int)percent % 10);
+            }
+            printf("\n");
+        }
+
+        return 0;
+    }
 
     public static int Main(string[] args)
     {
@@ -170,160 +332,7 @@ public static class Program
 
 
 
-// int pack_file_compressed(const char* input_file, int method, int level, FILE* f) {
-//   FILE* in;
-//   unsigned long fsize;
-//   unsigned long checksum;
-//   const char* shown_name;
-//   unsigned char buffer[BLOCK_SIZE];
-//   unsigned char result[BLOCK_SIZE * 2]; /* FIXME twice is too large */
-//   unsigned char progress[20];
-//   int c;
-//   unsigned long percent;
-//   unsigned long total_read;
-//   unsigned long total_compressed;
-//   int chunk_size;
-//
-//   /* sanity check */
-//   in = fopen(input_file, "rb");
-//   if (!in) {
-//     printf("Error: could not open %s\n", input_file);
-//     return -1;
-//   }
-//
-//   /* find size of the file */
-//   fseek(in, 0, SEEK_END);
-//   fsize = ftell(in);
-//   fseek(in, 0, SEEK_SET);
-//
-//   /* already a 6pack archive? */
-//   if (detect_magic(in)) {
-//     printf("Error: file %s is already a 6pack archive!\n", input_file);
-//     fclose(in);
-//     return -1;
-//   }
-//
-//   /* truncate directory prefix, e.g. "foo/bar/FILE.txt" becomes "FILE.txt" */
-//   shown_name = input_file + strlen(input_file) - 1;
-//   while (shown_name > input_file)
-//     if (*(shown_name - 1) == PATH_SEPARATOR)
-//       break;
-//     else
-//       shown_name--;
-//
-//   /* chunk for File Entry */
-//   buffer[0] = fsize & 255;
-//   buffer[1] = (fsize >> 8) & 255;
-//   buffer[2] = (fsize >> 16) & 255;
-//   buffer[3] = (fsize >> 24) & 255;
-// #if 0
-//   buffer[4] = (fsize >> 32) & 255;
-//   buffer[5] = (fsize >> 40) & 255;
-//   buffer[6] = (fsize >> 48) & 255;
-//   buffer[7] = (fsize >> 56) & 255;
-// #else
-//   /* because fsize is only 32-bit */
-//   buffer[4] = 0;
-//   buffer[5] = 0;
-//   buffer[6] = 0;
-//   buffer[7] = 0;
-// #endif
-//   buffer[8] = (strlen(shown_name) + 1) & 255;
-//   buffer[9] = (strlen(shown_name) + 1) >> 8;
-//   checksum = 1L;
-//   checksum = update_adler32(checksum, buffer, 10);
-//   checksum = update_adler32(checksum, shown_name, strlen(shown_name) + 1);
-//   write_chunk_header(f, 1, 0, 10 + strlen(shown_name) + 1, checksum, 0);
-//   fwrite(buffer, 10, 1, f);
-//   fwrite(shown_name, strlen(shown_name) + 1, 1, f);
-//   total_compressed = 16 + 10 + strlen(shown_name) + 1;
-//
-//   /* for progress status */
-//   memset(progress, ' ', 20);
-//   if (strlen(shown_name) < 16)
-//     for (c = 0; c < (int)strlen(shown_name); c++) progress[c] = shown_name[c];
-//   else {
-//     for (c = 0; c < 13; c++) progress[c] = shown_name[c];
-//     progress[13] = '.';
-//     progress[14] = '.';
-//     progress[15] = ' ';
-//   }
-//   progress[16] = '[';
-//   progress[17] = 0;
-//   printf("%s", progress);
-//   for (c = 0; c < 50; c++) printf(".");
-//   printf("]\r");
-//   printf("%s", progress);
-//
-//   /* read file and place in archive */
-//   total_read = 0;
-//   percent = 0;
-//   for (;;) {
-//     int compress_method = method;
-//     int last_percent = (int)percent;
-//     size_t bytes_read = fread(buffer, 1, BLOCK_SIZE, in);
-//     if (bytes_read == 0) break;
-//     total_read += bytes_read;
-//
-//     /* for progress */
-//     if (fsize < (1 << 24))
-//       percent = total_read * 100 / fsize;
-//     else
-//       percent = total_read / 256 * 100 / (fsize >> 8);
-//     percent >>= 1;
-//     while (last_percent < (int)percent) {
-//       printf("#");
-//       last_percent++;
-//     }
-//
-//     /* too small, don't bother to compress */
-//     if (bytes_read < 32) compress_method = 0;
-//
-//     /* write to output */
-//     switch (compress_method) {
-//       /* FastLZ */
-//       case 1:
-//         chunk_size = fastlz_compress_level(level, buffer, bytes_read, result);
-//         checksum = update_adler32(1L, result, chunk_size);
-//         write_chunk_header(f, 17, 1, chunk_size, checksum, bytes_read);
-//         fwrite(result, 1, chunk_size, f);
-//         total_compressed += 16;
-//         total_compressed += chunk_size;
-//         break;
-//
-//       /* uncompressed, also fallback method */
-//       case 0:
-//       default:
-//         checksum = 1L;
-//         checksum = update_adler32(checksum, buffer, bytes_read);
-//         write_chunk_header(f, 17, 0, bytes_read, checksum, bytes_read);
-//         fwrite(buffer, 1, bytes_read, f);
-//         total_compressed += 16;
-//         total_compressed += bytes_read;
-//         break;
-//     }
-//   }
-//
-//   fclose(in);
-//   if (total_read != fsize) {
-//     printf("\n");
-//     printf("Error: reading %s failed!\n", input_file);
-//     return -1;
-//   } else {
-//     printf("] ");
-//     if (total_compressed < fsize) {
-//       if (fsize < (1 << 20))
-//         percent = total_compressed * 1000 / fsize;
-//       else
-//         percent = total_compressed / 256 * 1000 / (fsize >> 8);
-//       percent = 1000 - percent;
-//       printf("%2d.%d%% saved", (int)percent / 10, (int)percent % 10);
-//     }
-//     printf("\n");
-//   }
-//
-//   return 0;
-// }
+
 //
 // int pack_file(int compress_level, const char* input_file, const char* output_file) {
 //   FILE* f;
@@ -354,7 +363,7 @@ public static class Program
 // int benchmark_speed(int compress_level, const char* input_file);
 //
 // int benchmark_speed(int compress_level, const char* input_file) {
-//   FILE* in;
+//   FILE* ifs;
 //   unsigned long fsize;
 //   unsigned long maxout;
 //   const char* shown_name;
@@ -363,21 +372,21 @@ public static class Program
 //   size_t bytes_read;
 //
 //   /* sanity check */
-//   in = fopen(input_file, "rb");
-//   if (!in) {
+//   ifs = fopen(input_file, "rb");
+//   if (!ifs) {
 //     printf("Error: could not open %s\n", input_file);
 //     return -1;
 //   }
 //
 //   /* find size of the file */
-//   fseek(in, 0, SEEK_END);
-//   fsize = ftell(in);
-//   fseek(in, 0, SEEK_SET);
+//   fseek(ifs, 0, SEEK_END);
+//   fsize = ftell(ifs);
+//   fseek(ifs, 0, SEEK_SET);
 //
 //   /* already a 6pack archive? */
-//   if (detect_magic(in)) {
+//   if (detect_magic(ifs)) {
 //     printf("Error: no benchmark for 6pack archive!\n");
-//     fclose(in);
+//     fclose(ifs);
 //     return -1;
 //   }
 //
@@ -397,18 +406,18 @@ public static class Program
 //     printf("Error: not enough memory!\n");
 //     free(buffer);
 //     free(result);
-//     fclose(in);
+//     fclose(ifs);
 //     return -1;
 //   }
 //
 //   printf("Reading source file....\n");
-//   bytes_read = fread(buffer, 1, fsize, in);
+//   bytes_read = fread(buffer, 1, fsize, ifs);
 //   if (bytes_read != fsize) {
 //     printf("Error reading file %s!\n", shown_name);
 //     printf("Read %d bytes, expecting %d bytes\n", bytes_read, fsize);
 //     free(buffer);
 //     free(result);
-//     fclose(in);
+//     fclose(ifs);
 //     return -1;
 //   }
 //
@@ -470,7 +479,7 @@ public static class Program
 // #endif
 //   }
 //
-//   fclose(in);
+//   fclose(ifs);
 //   return 0;
 // }
 // #endif /* SIXPACK_BENCHMARK_WIN32 */
