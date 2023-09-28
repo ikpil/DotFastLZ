@@ -86,7 +86,7 @@ public static class Program
         return (s2 << 16) + s1;
     }
 
-    private static void Usage()
+    private static void usage()
     {
         Console.WriteLine("6pack: high-speed file compression tool");
         Console.WriteLine("Copyright (C) Ariya Hidayat");
@@ -130,36 +130,46 @@ public static class Program
     }
 
 
+    public static void write_magic(FileStream f) 
+    {
+        f.Write(sixpack_magic);        
+    }
+
+
+    public static void write_chunk_header(FileStream f, int id, int options, ulong size, ulong checksum, ulong extra) 
+    {
+        byte[] buffer = new byte[16];
+
+        buffer[0] = (byte)(id & 255);
+        buffer[1] = (byte)(id >> 8);
+        buffer[2] = (byte)(options & 255);
+        buffer[3] = (byte)(options >> 8);
+        buffer[4] = (byte)(size & 255);
+        buffer[5] = (byte)((size >> 8) & 255);
+        buffer[6] = (byte)((size >> 16) & 255);
+        buffer[7] = (byte)((size >> 24) & 255);
+        buffer[8] = (byte)(checksum & 255);
+        buffer[9] = (byte)((checksum >> 8) & 255);
+        buffer[10] = (byte)((checksum >> 16) & 255);
+        buffer[11] = (byte)((checksum >> 24) & 255);
+        buffer[12] = (byte)(extra & 255);
+        buffer[13] = (byte)((extra >> 8) & 255);
+        buffer[14] = (byte)((extra >> 16) & 255);
+        buffer[15] = (byte)((extra >> 24) & 255);
+
+        f.Write(buffer);
+    }
+
+
     public static int Main(string[] args)
     {
-        Usage();
+        usage();
+        return 0;
+    }
+}
 
-//
-// void write_magic(FILE* f) { fwrite(sixpack_magic, 8, 1, f); }
-//
-// void write_chunk_header(FILE* f, int id, int options, unsigned long size, unsigned long checksum, unsigned long extra) {
-//   unsigned char buffer[16];
-//
-//   buffer[0] = id & 255;
-//   buffer[1] = id >> 8;
-//   buffer[2] = options & 255;
-//   buffer[3] = options >> 8;
-//   buffer[4] = size & 255;
-//   buffer[5] = (size >> 8) & 255;
-//   buffer[6] = (size >> 16) & 255;
-//   buffer[7] = (size >> 24) & 255;
-//   buffer[8] = checksum & 255;
-//   buffer[9] = (checksum >> 8) & 255;
-//   buffer[10] = (checksum >> 16) & 255;
-//   buffer[11] = (checksum >> 24) & 255;
-//   buffer[12] = extra & 255;
-//   buffer[13] = (extra >> 8) & 255;
-//   buffer[14] = (extra >> 16) & 255;
-//   buffer[15] = (extra >> 24) & 255;
-//
-//   fwrite(buffer, 16, 1, f);
-// }
-//
+
+
 // int pack_file_compressed(const char* input_file, int method, int level, FILE* f) {
 //   FILE* in;
 //   unsigned long fsize;
@@ -575,9 +585,3 @@ public static class Program
 //   /* unreachable */
 //   return 0;
 // }
-
-        // See https://aka.ms/new-console-template for more information
-        Console.WriteLine("Hello, World!");
-        return 0;
-    }
-}
