@@ -24,6 +24,9 @@
 
 using System;
 using System.IO;
+using System.Linq;
+using System.Text;
+using DotFastLZ.Compression;
 
 namespace DotFastLZ.SixPack;
 
@@ -41,7 +44,7 @@ public static class Program
     /* for Adler-32 checksum algorithm, see RFC 1950 Section 8.2 */
     private const int ADLER32_BASE = 65521;
 
-    private static ulong Update_adler32(ulong checksum, byte[] buf, int len)
+    private static ulong update_adler32(ulong checksum, byte[] buf, int len)
     {
         int ptr = 0;
         ulong s1 = checksum & 0xffff;
@@ -104,7 +107,7 @@ public static class Program
 
     /* return non-zero if magic sequence is detected */
     /* warning: reset the read pointer to the beginning of the file */
-    public static int detect_magic(FileStream f)
+    public static bool detect_magic(FileStream f)
     {
         byte[] buffer = new byte[8];
         int bytes_read;
@@ -115,28 +118,28 @@ public static class Program
         f.Seek(0, SeekOrigin.Begin);
         if (bytes_read < 8)
         {
-            return 0;
+            return false;
         }
 
         for (c = 0; c < 8; c++)
         {
             if (buffer[c] != sixpack_magic[c])
             {
-                return 0;
+                return false;
             }
         }
 
-        return -1;
+        return true;
     }
 
 
-    public static void write_magic(FileStream f) 
+    public static void write_magic(FileStream f)
     {
-        f.Write(sixpack_magic);        
+        f.Write(sixpack_magic);
     }
 
 
-    public static void write_chunk_header(FileStream f, int id, int options, ulong size, ulong checksum, ulong extra) 
+    public static void write_chunk_header(FileStream f, int id, int options, long size, ulong checksum, long extra)
     {
         byte[] buffer = new byte[16];
 
@@ -160,23 +163,17 @@ public static class Program
         f.Write(buffer);
     }
 
-    public static int pack_file_compressed(string input_file, int method, int level, FileStream f) 
-    {        
-        ulong fsize;
+    public static int pack_file_compressed(string input_file, int method, int level, FileStream f)
+    {
         ulong checksum;
-        string shown_name;
         byte[] buffer = new byte[BLOCK_SIZE];
         byte[] result = new byte[BLOCK_SIZE * 2]; /* FIXME twice is too large */
         byte[] progress = new byte[20];
-        int c;
-        ulong percent;
-        ulong total_read;
-        ulong total_compressed;
         int chunk_size;
 
         /* sanity check */
         FileStream temp;
-        try 
+        try
         {
             temp = new FileStream(input_file, FileMode.Open, FileAccess.Read, FileShare.Read);
         }
@@ -190,134 +187,139 @@ public static class Program
         using var ifs = temp;
 
         /* find size of the file */
-        fseek(ifs, 0, SEEK_END);
-        fsize = ftell(ifs);
-        fseek(ifs, 0, SEEK_SET);
+        ifs.Seek(0, SeekOrigin.End);
+        long fsize = ifs.Position;
+        ifs.Seek(0, SeekOrigin.Begin);
 
         /* already a 6pack archive? */
-        if (detect_magic(ifs)) {
-            printf("Error: file %s is already a 6pack archive!\n", input_file);
-            fclose(ifs);
+        if (detect_magic(ifs))
+        {
+            Console.WriteLine($"Error: file {input_file} is already a 6pack archive!");
             return -1;
         }
 
         /* truncate directory prefix, e.g. "foo/bar/FILE.txt" becomes "FILE.txt" */
-        shown_name = input_file + strlen(input_file) - 1;
-        while (shown_name > input_file)
-            if (*(shown_name - 1) == PATH_SEPARATOR)
-            break;
-            else
-            shown_name--;
+        string shown_name_string = input_file
+            .Split(new char[] { '/', '\\', Path.PathSeparator, Path.DirectorySeparatorChar, }, StringSplitOptions.RemoveEmptyEntries)
+            .Last();
+        byte[] shown_name = Encoding.UTF8.GetBytes(shown_name_string);
 
         /* chunk for File Entry */
-        buffer[0] = fsize & 255;
-        buffer[1] = (fsize >> 8) & 255;
-        buffer[2] = (fsize >> 16) & 255;
-        buffer[3] = (fsize >> 24) & 255;
-        #if 0
-        buffer[4] = (fsize >> 32) & 255;
-        buffer[5] = (fsize >> 40) & 255;
-        buffer[6] = (fsize >> 48) & 255;
-        buffer[7] = (fsize >> 56) & 255;
-        #else
-        /* because fsize is only 32-bit */
-        buffer[4] = 0;
-        buffer[5] = 0;
-        buffer[6] = 0;
-        buffer[7] = 0;
-        #endif
-        buffer[8] = (strlen(shown_name) + 1) & 255;
-        buffer[9] = (strlen(shown_name) + 1) >> 8;
+        buffer[0] = (byte)(fsize & 255);
+        buffer[1] = (byte)((fsize >> 8) & 255);
+        buffer[2] = (byte)((fsize >> 16) & 255);
+        buffer[3] = (byte)((fsize >> 24) & 255);
+        buffer[4] = (byte)((fsize >> 32) & 255);
+        buffer[5] = (byte)((fsize >> 40) & 255);
+        buffer[6] = (byte)((fsize >> 48) & 255);
+        buffer[7] = (byte)((fsize >> 56) & 255);
+
+        buffer[8] = (byte)(shown_name.Length + 1 & 255);
+        buffer[9] = (byte)(shown_name.Length + 1 >> 8);
         checksum = 1L;
         checksum = update_adler32(checksum, buffer, 10);
-        checksum = update_adler32(checksum, shown_name, strlen(shown_name) + 1);
-        write_chunk_header(f, 1, 0, 10 + strlen(shown_name) + 1, checksum, 0);
-        fwrite(buffer, 10, 1, f);
-        fwrite(shown_name, strlen(shown_name) + 1, 1, f);
-        total_compressed = 16 + 10 + strlen(shown_name) + 1;
+        checksum = update_adler32(checksum, shown_name, shown_name.Length + 1);
+        write_chunk_header(f, 1, 0, 10 + shown_name.Length + 1, checksum, 0);
+        f.Write(buffer, 10, 1);
+        f.Write(shown_name, shown_name.Length + 1, 1);
+        long total_compressed = 16 + 10 + shown_name.Length + 1;
 
         /* for progress status */
-        memset(progress, ' ', 20);
-        if (strlen(shown_name) < 16)
-            for (c = 0; c < (int)strlen(shown_name); c++) progress[c] = shown_name[c];
-        else {
-            for (c = 0; c < 13; c++) progress[c] = shown_name[c];
-            progress[13] = '.';
-            progress[14] = '.';
-            progress[15] = ' ';
+        Array.Fill(progress, (byte)' ');
+        int c = 0;
+        if (shown_name.Length < 16)
+            for (c = 0; c < shown_name.Length; c++)
+                progress[c] = shown_name[c];
+        else
+        {
+            for (c = 0; c < 13; c++)
+                progress[c] = shown_name[c];
+            
+            progress[13] = (byte)'.';
+            progress[14] = (byte)'.';
+            progress[15] = (byte)' ';
         }
-        progress[16] = '[';
+
+        progress[16] = (byte)'[';
         progress[17] = 0;
-        printf("%s", progress);
-        for (c = 0; c < 50; c++) printf(".");
-        printf("]\r");
-        printf("%s", progress);
+        Console.WriteLine("%s", progress);
+        for (c = 0; c < 50; c++) Console.WriteLine(".");
+        Console.WriteLine("]\r");
+        Console.WriteLine("%s", progress);
 
         /* read file and place ifs archive */
-        total_read = 0;
-        percent = 0;
-        for (;;) {
+        long total_read = 0;
+        long percent = 0;
+        for (;;)
+        {
             int compress_method = method;
             int last_percent = (int)percent;
-            size_t bytes_read = fread(buffer, 1, BLOCK_SIZE, ifs);
-            if (bytes_read == 0) break;
+            int bytes_read = ifs.Read(buffer, 0, BLOCK_SIZE);
+            if (bytes_read == 0)
+                break;
             total_read += bytes_read;
 
             /* for progress */
             if (fsize < (1 << 24))
-            percent = total_read * 100 / fsize;
+                percent = total_read * 100 / fsize;
             else
-            percent = total_read / 256 * 100 / (fsize >> 8);
+                percent = total_read / 256 * 100 / (fsize >> 8);
             percent >>= 1;
-            while (last_percent < (int)percent) {
-            printf("#");
-            last_percent++;
+            while (last_percent < (int)percent)
+            {
+                Console.Write("#");
+                last_percent++;
             }
 
             /* too small, don't bother to compress */
             if (bytes_read < 32) compress_method = 0;
 
             /* write to output */
-            switch (compress_method) {
-            /* FastLZ */
-            case 1:
-                chunk_size = fastlz_compress_level(level, buffer, bytes_read, result);
-                checksum = update_adler32(1L, result, chunk_size);
-                write_chunk_header(f, 17, 1, chunk_size, checksum, bytes_read);
-                fwrite(result, 1, chunk_size, f);
-                total_compressed += 16;
-                total_compressed += chunk_size;
-                break;
+            switch (compress_method)
+            {
+                /* FastLZ */
+                case 1:
+                    chunk_size = FastLZ.Compress( buffer, 0, bytes_read, result, 0, level);
+                    checksum = update_adler32(1L, result, chunk_size);
+                    write_chunk_header(f, 17, 1, chunk_size, checksum, bytes_read);
+                    f.Write(result, 0, chunk_size);
+                    total_compressed += 16;
+                    total_compressed += chunk_size;
+                    break;
 
-            /* uncompressed, also fallback method */
-            case 0:
-            default:
-                checksum = 1L;
-                checksum = update_adler32(checksum, buffer, bytes_read);
-                write_chunk_header(f, 17, 0, bytes_read, checksum, bytes_read);
-                fwrite(buffer, 1, bytes_read, f);
-                total_compressed += 16;
-                total_compressed += bytes_read;
-                break;
+                /* uncompressed, also fallback method */
+                case 0:
+                default:
+                    checksum = 1L;
+                    checksum = update_adler32(checksum, buffer, bytes_read);
+                    write_chunk_header(f, 17, 0, bytes_read, checksum, bytes_read);
+                    f.Write(buffer, 0, bytes_read);
+                    total_compressed += 16;
+                    total_compressed += bytes_read;
+                    break;
             }
         }
 
-        fclose(ifs);
-        if (total_read != fsize) {
-            printf("\n");
-            printf("Error: reading %s failed!\n", input_file);
+        if (total_read != fsize)
+        {
+            Console.WriteLine("");
+            Console.WriteLine($"Error: reading {input_file} failed!");
             return -1;
-        } else {
-            printf("] ");
-            if (total_compressed < fsize) {
-            if (fsize < (1 << 20))
-                percent = total_compressed * 1000 / fsize;
-            else
-                percent = total_compressed / 256 * 1000 / (fsize >> 8);
-            percent = 1000 - percent;
-            printf("%2d.%d%% saved", (int)percent / 10, (int)percent % 10);
+        }
+        else
+        {
+            Console.WriteLine("] ");
+            if (total_compressed < fsize)
+            {
+                if (fsize < (1 << 20))
+                    percent = total_compressed * 1000 / fsize;
+                else
+                    percent = total_compressed / 256 * 1000 / (fsize >> 8);
+                percent = 1000 - percent;
+                Console.WriteLine($"{(int)percent / 10:D2}.{(int)percent % 10:D1}%% saved");
             }
-            printf("\n");
+
+            Console.WriteLine("");
         }
 
         return 0;
@@ -329,8 +331,6 @@ public static class Program
         return 0;
     }
 }
-
-
 
 
 //
