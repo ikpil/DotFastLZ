@@ -234,7 +234,7 @@ public static class Program
         {
             for (c = 0; c < 13; c++)
                 progress[c] = shown_name[c];
-            
+
             progress[13] = (byte)'.';
             progress[14] = (byte)'.';
             progress[15] = (byte)' ';
@@ -279,7 +279,7 @@ public static class Program
             {
                 /* FastLZ */
                 case 1:
-                    chunk_size = FastLZ.Compress( buffer, 0, bytes_read, result, 0, level);
+                    chunk_size = FastLZ.Compress(buffer, 0, bytes_read, result, 0, level);
                     checksum = update_adler32(1L, result, chunk_size);
                     write_chunk_header(f, 17, 1, chunk_size, checksum, bytes_read);
                     f.Write(result, 0, chunk_size);
@@ -325,6 +325,48 @@ public static class Program
         return 0;
     }
 
+    public static FileStream OpenFile(string filePath, FileMode mode, FileAccess access = FileAccess.Read, FileShare share = FileShare.Read)
+    {
+        try
+        {
+            return new FileStream(filePath, mode, access, share);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            return null;
+        }
+    }
+
+
+    public static int pack_file(int compress_level, string input_file, string output_file)
+    {
+        int result;
+
+        var testFs = OpenFile(output_file, FileMode.Open);
+        if (null != testFs)
+        {
+            using var a = testFs;
+            Console.WriteLine($"Error: file {output_file} already exists. Aborted.");
+            return -1;
+        }
+
+        var tempFs = OpenFile(output_file, FileMode.CreateNew, FileAccess.Write, FileShare.ReadWrite);
+        if (null == tempFs)
+        {
+            Console.WriteLine($"Error: could not create {output_file}. Aborted.");
+            return -1;
+        }
+
+        using var f = tempFs;
+
+        write_magic(f);
+        result = pack_file_compressed(input_file, 1, compress_level, f);
+
+        return result;
+    }
+
+
     public static int Main(string[] args)
     {
         usage();
@@ -333,31 +375,6 @@ public static class Program
 }
 
 
-//
-// int pack_file(int compress_level, const char* input_file, const char* output_file) {
-//   FILE* f;
-//   int result;
-//
-//   f = fopen(output_file, "rb");
-//   if (f) {
-//     fclose(f);
-//     printf("Error: file %s already exists. Aborted.\n\n", output_file);
-//     return -1;
-//   }
-//
-//   f = fopen(output_file, "wb");
-//   if (!f) {
-//     printf("Error: could not create %s. Aborted.\n\n", output_file);
-//     return -1;
-//   }
-//
-//   write_magic(f);
-//
-//   result = pack_file_compressed(input_file, 1, compress_level, f);
-//   fclose(f);
-//
-//   return result;
-// }
 //
 // #ifdef SIXPACK_BENCHMARK_WIN32
 // int benchmark_speed(int compress_level, const char* input_file);
