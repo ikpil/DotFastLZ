@@ -178,21 +178,13 @@ public static class Program
     public static int pack_file_compressed(string input_file, int method, int level, FileStream f)
     {
         ulong checksum;
-        byte[] buffer = new byte[BLOCK_SIZE];
         byte[] result = new byte[BLOCK_SIZE * 2]; /* FIXME twice is too large */
-        byte[] progress = new byte[20];
-        int chunk_size;
 
         /* sanity check */
-        FileStream temp;
-        try
-        {
-            temp = new FileStream(input_file, FileMode.Open, FileAccess.Read, FileShare.Read);
-        }
-        catch (Exception e)
+        FileStream temp = OpenFile(input_file, FileMode.Open);
+        if (null == temp)
         {
             Console.WriteLine($"Error: could not open {input_file}");
-            Console.WriteLine(e.Message);
             return -1;
         }
 
@@ -215,6 +207,7 @@ public static class Program
         byte[] shown_name = Encoding.UTF8.GetBytes(shown_name_string);
 
         /* chunk for File Entry */
+        byte[] buffer = new byte[BLOCK_SIZE];
         buffer[0] = (byte)(fsize & 255);
         buffer[1] = (byte)((fsize >> 8) & 255);
         buffer[2] = (byte)((fsize >> 16) & 255);
@@ -223,18 +216,19 @@ public static class Program
         buffer[5] = (byte)((fsize >> 40) & 255);
         buffer[6] = (byte)((fsize >> 48) & 255);
         buffer[7] = (byte)((fsize >> 56) & 255);
-
-        buffer[8] = (byte)(shown_name.Length + 1 & 255);
-        buffer[9] = (byte)(shown_name.Length + 1 >> 8);
+        buffer[8] = (byte)(shown_name.Length + 1 & 255); // filename length for lowest bit
+        buffer[9] = (byte)(shown_name.Length + 1 >> 8);  // filename length for highest bit
+        
         checksum = 1L;
         checksum = update_adler32(checksum, buffer, 10);
-        checksum = update_adler32(checksum, shown_name, shown_name.Length + 1);
-        write_chunk_header(f, 1, 0, 10 + shown_name.Length + 1, checksum, 0);
-        f.Write(buffer, 10, 1);
-        f.Write(shown_name, shown_name.Length + 1, 1);
-        long total_compressed = 16 + 10 + shown_name.Length + 1;
+        checksum = update_adler32(checksum, shown_name, shown_name.Length);
+        write_chunk_header(f, 1, 0, 10 + shown_name.Length, checksum, 0);
+        f.Write(buffer, 0, 10);
+        f.Write(shown_name, 0, shown_name.Length);
+        long total_compressed = 16 + 10 + shown_name.Length;
 
         /* for progress status */
+        byte[] progress = new byte[20];
         Array.Fill(progress, (byte)' ');
         int c = 0;
         if (shown_name.Length < 16)
@@ -252,10 +246,10 @@ public static class Program
 
         progress[16] = (byte)'[';
         progress[17] = 0;
-        Console.WriteLine("%s", progress);
+        Console.Write("%s", progress);
         for (c = 0; c < 50; c++) Console.WriteLine(".");
-        Console.WriteLine("]\r");
-        Console.WriteLine("%s", progress);
+        Console.Write("]\r");
+        Console.Write("%s", progress);
 
         /* read file and place ifs archive */
         long total_read = 0;
@@ -289,23 +283,27 @@ public static class Program
             {
                 /* FastLZ */
                 case 1:
-                    chunk_size = FastLZ.Compress(buffer, 0, bytes_read, result, 0, level);
+                {
+                    int chunk_size = FastLZ.Compress(buffer, 0, bytes_read, result, 0, level);
                     checksum = update_adler32(1L, result, chunk_size);
                     write_chunk_header(f, 17, 1, chunk_size, checksum, bytes_read);
                     f.Write(result, 0, chunk_size);
                     total_compressed += 16;
                     total_compressed += chunk_size;
+                }
                     break;
 
                 /* uncompressed, also fallback method */
                 case 0:
                 default:
+                {
                     checksum = 1L;
                     checksum = update_adler32(checksum, buffer, bytes_read);
                     write_chunk_header(f, 17, 0, bytes_read, checksum, bytes_read);
                     f.Write(buffer, 0, bytes_read);
                     total_compressed += 16;
                     total_compressed += bytes_read;
+                }
                     break;
             }
         }
@@ -361,7 +359,7 @@ public static class Program
             return -1;
         }
 
-        fs = OpenFile(output_file, FileMode.CreateNew, FileAccess.Write, FileShare.ReadWrite);
+        fs = OpenFile(output_file, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
         if (null == fs)
         {
             Console.WriteLine($"Error: could not create {output_file}. Aborted.");
