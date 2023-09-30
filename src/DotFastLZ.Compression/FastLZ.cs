@@ -29,6 +29,7 @@ namespace DotFastLZ.Compression
 {
     public static class FastLZ
     {
+        public const string VERSION_STRING = "0.5.0";
         private const int MAX_DISTANCE = 8191;
         private const int MAX_FARDISTANCE = 65535 + MAX_DISTANCE - 1;
 

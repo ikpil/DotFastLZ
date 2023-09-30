@@ -23,6 +23,7 @@
 */
 
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -92,8 +93,7 @@ public static class Program
     private static void usage()
     {
         Console.WriteLine("6pack: high-speed file compression tool");
-        Console.WriteLine("Copyright (C) Ariya Hidayat");
-        Console.WriteLine("Copyright (C) Choi Ikpil");
+        Console.WriteLine("Copyright (C) Ariya Hidayat, Choi Ikpil(ikpil@naver.com)");
         Console.WriteLine("");
         Console.WriteLine("Usage: 6pack [options]  input-file  output-file");
         Console.WriteLine("");
@@ -110,18 +110,17 @@ public static class Program
     public static bool detect_magic(FileStream f)
     {
         byte[] buffer = new byte[8];
-        int bytes_read;
-        int c;
 
         f.Seek(0, SeekOrigin.Begin);
-        bytes_read = f.Read(buffer, 0, 8);
+        var bytesRead = f.Read(buffer, 0, 8);
         f.Seek(0, SeekOrigin.Begin);
-        if (bytes_read < 8)
+
+        if (bytesRead < 8)
         {
             return false;
         }
 
-        for (c = 0; c < 8; c++)
+        for (int c = 0; c < 8; c++)
         {
             if (buffer[c] != sixpack_magic[c])
             {
@@ -163,6 +162,19 @@ public static class Program
         f.Write(buffer);
     }
 
+    public static string GetFileName(string path)
+    {
+        if (string.IsNullOrEmpty(path))
+        {
+            return string.Empty;
+        }
+
+        /* truncate directory prefix, e.g. "foo/bar/FILE.txt" becomes "FILE.txt" */
+        return path
+            .Split(new char[] { '/', '\\', Path.PathSeparator, Path.DirectorySeparatorChar, }, StringSplitOptions.RemoveEmptyEntries)
+            .Last();
+    }
+
     public static int pack_file_compressed(string input_file, int method, int level, FileStream f)
     {
         ulong checksum;
@@ -199,9 +211,7 @@ public static class Program
         }
 
         /* truncate directory prefix, e.g. "foo/bar/FILE.txt" becomes "FILE.txt" */
-        string shown_name_string = input_file
-            .Split(new char[] { '/', '\\', Path.PathSeparator, Path.DirectorySeparatorChar, }, StringSplitOptions.RemoveEmptyEntries)
-            .Last();
+        string shown_name_string = GetFileName(input_file);
         byte[] shown_name = Encoding.UTF8.GetBytes(shown_name_string);
 
         /* chunk for File Entry */
@@ -343,271 +353,260 @@ public static class Program
     {
         int result;
 
-        var testFs = OpenFile(output_file, FileMode.Open);
-        if (null != testFs)
+        var fs = OpenFile(output_file, FileMode.Open);
+        if (null != fs)
         {
-            using var a = testFs;
+            fs.Dispose();
             Console.WriteLine($"Error: file {output_file} already exists. Aborted.");
             return -1;
         }
 
-        var tempFs = OpenFile(output_file, FileMode.CreateNew, FileAccess.Write, FileShare.ReadWrite);
-        if (null == tempFs)
+        fs = OpenFile(output_file, FileMode.CreateNew, FileAccess.Write, FileShare.ReadWrite);
+        if (null == fs)
         {
             Console.WriteLine($"Error: could not create {output_file}. Aborted.");
             return -1;
         }
 
-        using var f = tempFs;
+        using var ofs = fs;
 
-        write_magic(f);
-        result = pack_file_compressed(input_file, 1, compress_level, f);
+        write_magic(ofs);
+        result = pack_file_compressed(input_file, 1, compress_level, ofs);
 
         return result;
+    }
+
+    public static int benchmark_speed(int compress_level, string input_file)
+    {
+        /* sanity check */
+        var fs = OpenFile(input_file, FileMode.Open);
+        if (null == fs)
+        {
+            Console.WriteLine($"Error: could not open {input_file}");
+            return -1;
+        }
+
+        using var ifs = fs;
+
+        /* find size of the file */
+        ifs.Seek(0, SeekOrigin.End);
+        var fsize = ifs.Position;
+        ifs.Seek(0, SeekOrigin.Begin);
+
+        /* already a 6pack archive? */
+        if (detect_magic(ifs))
+        {
+            Console.WriteLine("Error: no benchmark for 6pack archive!");
+            return -1;
+        }
+
+        /* truncate directory prefix, e.g. "foo/bar/FILE.txt" becomes "FILE.txt" */
+        var shown_name = GetFileName(input_file);
+
+        long maxout = (long)(1.05d * fsize);
+        maxout = (maxout < 66) ? 66 : maxout;
+        byte[] buffer = new byte[fsize];
+        byte[] result = new byte[maxout];
+
+        /* for benchmark */
+        // if (null == buffer || null == result)
+        // {
+        //     Console.WriteLine("Error: not enough memory!");
+        //     return -1;
+        // }
+
+        Console.WriteLine("Reading source file....");
+        int bytes_read = ifs.Read(buffer, 0, 1);
+        if (bytes_read != fsize)
+        {
+            Console.WriteLine($"Error reading file {shown_name}!");
+            Console.WriteLine($"Read {bytes_read} bytes, expecting {fsize} bytes");
+            return -1;
+        }
+
+        /* shamelessly copied from QuickLZ 1.20 test program */
+        {
+            long mbs, fastest;
+
+            Console.WriteLine("Setting HIGH_PRIORITY_CLASS...");
+            {
+                Process currentProcess = Process.GetCurrentProcess();
+                currentProcess.PriorityClass = ProcessPriorityClass.High;
+            }
+
+            Console.WriteLine($"Benchmarking FastLZ Level {compress_level}, please wait...");
+
+            int u = 0;
+            int i = bytes_read;
+            fastest = 0;
+            for (int j = 0; j < 3; j++)
+            {
+                int y = 0;
+                mbs = Environment.TickCount64;
+                while (Environment.TickCount64 == mbs)
+                {
+                }
+
+                mbs = Environment.TickCount64;
+                while (Environment.TickCount64 - mbs < 3000) /* 1% accuracy with 18.2 timer */
+                {
+                    //u = fastlz_compress_level(compress_level, buffer, bytes_read, result);
+                    u = FastLZ.Compress(buffer, 0, bytes_read, result, 0, compress_level);
+                    y++;
+                }
+
+
+                mbs = (long)(((double)i * (double)y) / ((double)(Environment.TickCount64 - mbs) / 1000.0d) / 1000000.0d);
+                /*printf(" %.1f Mbyte/s  ", mbs);*/
+                if (fastest < mbs) fastest = mbs;
+            }
+
+            Console.WriteLine($"Compressed {i} bytes into {u} bytes ({(u * 100.0 / i):F1}%) at {fastest:F1} Mbyte/s.");
+
+            fastest = 0;
+            int compressed_size = u;
+            for (int j = 0; j < 3; j++)
+            {
+                int y = 0;
+                mbs = Environment.TickCount64;
+                while (Environment.TickCount64 == mbs)
+                {
+                }
+
+                mbs = Environment.TickCount64;
+                while (Environment.TickCount64 - mbs < 3000) /* 1% accuracy with 18.2 timer */
+                {
+                    //u = fastlz_decompress(result, compressed_size, buffer, bytes_read);
+                    u = FastLZ.Decompress(result, 0, compressed_size, buffer, 0, bytes_read);
+                    y++;
+                }
+
+                mbs = (long)(((double)i * (double)y) / ((double)(Environment.TickCount64 - mbs) / 1000.0d) / 1000000.0d);
+                /*printf(" %.1f Mbyte/s  ", mbs);*/
+                if (fastest < mbs) fastest = mbs;
+            }
+
+            Console.WriteLine($"\nDecompressed at {fastest:F1} Mbyte/s.\n\n(1 MB = 1000000 byte)");
+        }
+
+        return 0;
     }
 
 
     public static int Main(string[] args)
     {
-        usage();
+        /* show help with no argument at all*/
+        if (args.Length == 1)
+        {
+            usage();
+            return 0;
+        }
+
+        /* default compression level, not the fastest */
+        int compress_level = 2;
+
+        /* do benchmark only when explicitly specified */
+        bool benchmark = false;
+
+        /* no file is specified */
+        string input_file = string.Empty;
+        string output_file = string.Empty;
+
+        for (int i = 1; i <= args.Length; i++)
+        {
+            var argument = args[i].Trim();
+            if (string.IsNullOrEmpty(argument))
+                continue;
+
+            /* display help on usage */
+            if (argument == "-h" || argument == "--help")
+            {
+                usage();
+                return 0;
+            }
+
+            /* check for version information */
+            if (argument == "-v" || argument == "--version")
+            {
+                Console.WriteLine("6pack: high-speed file compression tool");
+                Console.WriteLine($"Version {SIXPACK_VERSION_STRING} (using FastLZ {FastLZ.VERSION_STRING})");
+                Console.WriteLine("Copyright (C) Ariya Hidayat, Choi Ikpil(ikpil@naver.com");
+                Console.WriteLine("");
+                return 0;
+            }
+
+            /* test compression speed? */
+            if (argument == "-mem")
+            {
+                benchmark = true;
+                continue;
+            }
+
+            /* compression level */
+            if (argument == "-1" || argument == "--fastest")
+            {
+                compress_level = 1;
+                continue;
+            }
+
+            if (argument == "-2")
+            {
+                compress_level = 2;
+                continue;
+            }
+
+            /* unknown option */
+            if (argument[0] == '-')
+            {
+                Console.WriteLine($"Error: unknown option {argument}\n");
+                Console.WriteLine("To get help on usage:\n");
+                Console.WriteLine("  6pack --help\n");
+                return -1;
+            }
+
+            /* first specified file is input */
+            if (string.IsNullOrEmpty(input_file))
+            {
+                input_file = argument;
+                continue;
+            }
+
+            /* next specified file is output */
+            if (string.IsNullOrEmpty(output_file))
+            {
+                output_file = argument;
+                continue;
+            }
+
+            /* files are already specified */
+            Console.WriteLine($"Error: unknown option {argument}\n");
+            Console.WriteLine("To get help on usage:");
+            Console.WriteLine("  6pack --help\n");
+            return -1;
+        }
+
+        if (string.IsNullOrEmpty(input_file))
+        {
+            Console.WriteLine("Error: input file is not specified.\n");
+            Console.WriteLine("To get help on usage:");
+            Console.WriteLine("  6pack --help\n");
+            return -1;
+        }
+
+        if (string.IsNullOrEmpty(output_file) && !benchmark)
+        {
+            Console.WriteLine("Error: output file is not specified.\n");
+            Console.WriteLine("To get help on usage:");
+            Console.WriteLine("  6pack --help\n");
+            return -1;
+        }
+
+        if (benchmark)
+            return benchmark_speed(compress_level, input_file);
+        else
+            return pack_file(compress_level, input_file, output_file);
+
+        /* unreachable */
         return 0;
     }
 }
-
-
-//
-// #ifdef SIXPACK_BENCHMARK_WIN32
-// int benchmark_speed(int compress_level, const char* input_file);
-//
-// int benchmark_speed(int compress_level, const char* input_file) {
-//   FILE* ifs;
-//   unsigned long fsize;
-//   unsigned long maxout;
-//   const char* shown_name;
-//   unsigned char* buffer;
-//   unsigned char* result;
-//   size_t bytes_read;
-//
-//   /* sanity check */
-//   ifs = fopen(input_file, "rb");
-//   if (!ifs) {
-//     printf("Error: could not open %s\n", input_file);
-//     return -1;
-//   }
-//
-//   /* find size of the file */
-//   fseek(ifs, 0, SEEK_END);
-//   fsize = ftell(ifs);
-//   fseek(ifs, 0, SEEK_SET);
-//
-//   /* already a 6pack archive? */
-//   if (detect_magic(ifs)) {
-//     printf("Error: no benchmark for 6pack archive!\n");
-//     fclose(ifs);
-//     return -1;
-//   }
-//
-//   /* truncate directory prefix, e.g. "foo/bar/FILE.txt" becomes "FILE.txt" */
-//   shown_name = input_file + strlen(input_file) - 1;
-//   while (shown_name > input_file)
-//     if (*(shown_name - 1) == PATH_SEPARATOR)
-//       break;
-//     else
-//       shown_name--;
-//
-//   maxout = 1.05 * fsize;
-//   maxout = (maxout < 66) ? 66 : maxout;
-//   buffer = (unsigned char*)malloc(fsize);
-//   result = (unsigned char*)malloc(maxout);
-//   if (!buffer || !result) {
-//     printf("Error: not enough memory!\n");
-//     free(buffer);
-//     free(result);
-//     fclose(ifs);
-//     return -1;
-//   }
-//
-//   printf("Reading source file....\n");
-//   bytes_read = fread(buffer, 1, fsize, ifs);
-//   if (bytes_read != fsize) {
-//     printf("Error reading file %s!\n", shown_name);
-//     printf("Read %d bytes, expecting %d bytes\n", bytes_read, fsize);
-//     free(buffer);
-//     free(result);
-//     fclose(ifs);
-//     return -1;
-//   }
-//
-//   /* shamelessly copied from QuickLZ 1.20 test program */
-//   {
-//     unsigned int j, y;
-//     size_t i, u = 0;
-//     double mbs, fastest;
-//     unsigned long compressed_size;
-//
-//     printf("Setting HIGH_PRIORITY_CLASS...\n");
-//     SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
-//
-//     printf("Benchmarking FastLZ Level %d, please wait...\n", compress_level);
-//
-//     i = bytes_read;
-//     fastest = 0.0;
-//     for (j = 0; j < 3; j++) {
-//       y = 0;
-//       mbs = GetTickCount();
-//       while (GetTickCount() == mbs)
-//         ;
-//       mbs = GetTickCount();
-//       while (GetTickCount() - mbs < 3000) /* 1% accuracy with 18.2 timer */
-//       {
-//         u = fastlz_compress_level(compress_level, buffer, bytes_read, result);
-//         y++;
-//       }
-//
-//       mbs = ((double)i * (double)y) / ((double)(GetTickCount() - mbs) / 1000.) / 1000000.;
-//       /*printf(" %.1f Mbyte/s  ", mbs);*/
-//       if (fastest < mbs) fastest = mbs;
-//     }
-//
-//     printf("\nCompressed %d bytes into %d bytes (%.1f%%) at %.1f Mbyte/s.\n", (unsigned int)i, (unsigned int)u,
-//            (double)u / (double)i * 100., fastest);
-//
-// #if 1
-//     fastest = 0.0;
-//     compressed_size = u;
-//     for (j = 0; j < 3; j++) {
-//       y = 0;
-//       mbs = GetTickCount();
-//       while (GetTickCount() == mbs)
-//         ;
-//       mbs = GetTickCount();
-//       while (GetTickCount() - mbs < 3000) /* 1% accuracy with 18.2 timer */
-//       {
-//         u = fastlz_decompress(result, compressed_size, buffer, bytes_read);
-//         y++;
-//       }
-//
-//       mbs = ((double)i * (double)y) / ((double)(GetTickCount() - mbs) / 1000.) / 1000000.;
-//       /*printf(" %.1f Mbyte/s  ", mbs);*/
-//       if (fastest < mbs) fastest = mbs;
-//     }
-//
-//     printf("\nDecompressed at %.1f Mbyte/s.\n\n(1 MB = 1000000 byte)\n", fastest);
-// #endif
-//   }
-//
-//   fclose(ifs);
-//   return 0;
-// }
-// #endif /* SIXPACK_BENCHMARK_WIN32 */
-//
-// int main(int argc, char** argv) {
-//   int i;
-//   int compress_level;
-//   int benchmark;
-//   char* input_file;
-//   char* output_file;
-//
-//   /* show help with no argument at all*/
-//   if (argc == 1) {
-//     usage();
-//     return 0;
-//   }
-//
-//   /* default compression level, not the fastest */
-//   compress_level = 2;
-//
-//   /* do benchmark only when explicitly specified */
-//   benchmark = 0;
-//
-//   /* no file is specified */
-//   input_file = 0;
-//   output_file = 0;
-//
-//   for (i = 1; i <= argc; i++) {
-//     char* argument = argv[i];
-//
-//     if (!argument) continue;
-//
-//     /* display help on usage */
-//     if (!strcmp(argument, "-h") || !strcmp(argument, "--help")) {
-//       usage();
-//       return 0;
-//     }
-//
-//     /* check for version information */
-//     if (!strcmp(argument, "-v") || !strcmp(argument, "--version")) {
-//       printf("6pack: high-speed file compression tool\n");
-//       printf("Version %s (using FastLZ %s)\n", SIXPACK_VERSION_STRING, FASTLZ_VERSION_STRING);
-//       printf("Copyright (C) Ariya Hidayat\n");
-//       printf("\n");
-//       return 0;
-//     }
-//
-//     /* test compression speed? */
-//     if (!strcmp(argument, "-mem")) {
-//       benchmark = 1;
-//       continue;
-//     }
-//
-//     /* compression level */
-//     if (!strcmp(argument, "-1") || !strcmp(argument, "--fastest")) {
-//       compress_level = 1;
-//       continue;
-//     }
-//     if (!strcmp(argument, "-2")) {
-//       compress_level = 2;
-//       continue;
-//     }
-//
-//     /* unknown option */
-//     if (argument[0] == '-') {
-//       printf("Error: unknown option %s\n\n", argument);
-//       printf("To get help on usage:\n");
-//       printf("  6pack --help\n\n");
-//       return -1;
-//     }
-//
-//     /* first specified file is input */
-//     if (!input_file) {
-//       input_file = argument;
-//       continue;
-//     }
-//
-//     /* next specified file is output */
-//     if (!output_file) {
-//       output_file = argument;
-//       continue;
-//     }
-//
-//     /* files are already specified */
-//     printf("Error: unknown option %s\n\n", argument);
-//     printf("To get help on usage:\n");
-//     printf("  6pack --help\n\n");
-//     return -1;
-//   }
-//
-//   if (!input_file) {
-//     printf("Error: input file is not specified.\n\n");
-//     printf("To get help on usage:\n");
-//     printf("  6pack --help\n\n");
-//     return -1;
-//   }
-//
-//   if (!output_file && !benchmark) {
-//     printf("Error: output file is not specified.\n\n");
-//     printf("To get help on usage:\n");
-//     printf("  6pack --help\n\n");
-//     return -1;
-//   }
-//
-// #ifdef SIXPACK_BENCHMARK_WIN32
-//   if (benchmark)
-//     return benchmark_speed(compress_level, input_file);
-//   else
-// #endif
-//     return pack_file(compress_level, input_file, output_file);
-//
-//   /* unreachable */
-//   return 0;
-// }
