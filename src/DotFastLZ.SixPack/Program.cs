@@ -495,8 +495,9 @@ public static class Program
 
     public static int Main(string[] args)
     {
+        //Console.WriteLine($"{string.Join("", args)}");
         /* show help with no argument at all*/
-        if (args.Length == 1)
+        if (args.Length == 0)
         {
             usage();
             return 0;
@@ -512,7 +513,7 @@ public static class Program
         string input_file = string.Empty;
         string output_file = string.Empty;
 
-        for (int i = 1; i <= args.Length; i++)
+        for (int i = 0; i < args.Length; i++)
         {
             var argument = args[i].Trim();
             if (string.IsNullOrEmpty(argument))
@@ -602,11 +603,12 @@ public static class Program
         }
 
         if (benchmark)
+        {
             return benchmark_speed(compress_level, input_file);
+        }
         else
+        {
             return pack_file(compress_level, input_file, output_file);
-
-        /* unreachable */
-        return 0;
+        }
     }
 }
