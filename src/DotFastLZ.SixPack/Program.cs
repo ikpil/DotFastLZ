@@ -171,7 +171,7 @@ public static class Program
 
         /* truncate directory prefix, e.g. "foo/bar/FILE.txt" becomes "FILE.txt" */
         return path
-            .Split(new char[] { '/', '\\', Path.PathSeparator, Path.DirectorySeparatorChar, }, StringSplitOptions.RemoveEmptyEntries)
+            .Split(new char[] { '/', '\\', Path.DirectorySeparatorChar, }, StringSplitOptions.RemoveEmptyEntries)
             .Last();
     }
 
@@ -203,8 +203,11 @@ public static class Program
         }
 
         /* truncate directory prefix, e.g. "foo/bar/FILE.txt" becomes "FILE.txt" */
-        string shown_name_string = GetFileName(input_file);
-        byte[] shown_name = Encoding.UTF8.GetBytes(shown_name_string);
+        string fileName = GetFileName(input_file);
+        byte[] utf8_shown_name = Encoding.UTF8.GetBytes(fileName);
+        byte[] shown_name = new byte[utf8_shown_name.Length + 1]; // for cstyle
+        Array.Fill(shown_name, (byte)0);
+        Array.Copy(utf8_shown_name, shown_name, utf8_shown_name.Length);
 
         /* chunk for File Entry */
         byte[] buffer = new byte[BLOCK_SIZE];
@@ -216,9 +219,9 @@ public static class Program
         buffer[5] = (byte)((fsize >> 40) & 255);
         buffer[6] = (byte)((fsize >> 48) & 255);
         buffer[7] = (byte)((fsize >> 56) & 255);
-        buffer[8] = (byte)(shown_name.Length + 1 & 255); // filename length for lowest bit
-        buffer[9] = (byte)(shown_name.Length + 1 >> 8);  // filename length for highest bit
-        
+        buffer[8] = (byte)(shown_name.Length & 255); // filename length for lowest bit
+        buffer[9] = (byte)(shown_name.Length >> 8); // filename length for highest bit
+
         checksum = 1L;
         checksum = update_adler32(checksum, buffer, 10);
         checksum = update_adler32(checksum, shown_name, shown_name.Length);
@@ -228,32 +231,31 @@ public static class Program
         long total_compressed = 16 + 10 + shown_name.Length;
 
         /* for progress status */
-        byte[] progress = new byte[20];
-        Array.Fill(progress, (byte)' ');
-        int c = 0;
-        if (shown_name.Length < 16)
-            for (c = 0; c < shown_name.Length; c++)
-                progress[c] = shown_name[c];
+        string progress;
+        if (13 < fileName.Length)
+        {
+            progress = fileName.Substring(0, 13);
+        }
         else
         {
-            for (c = 0; c < 13; c++)
-                progress[c] = shown_name[c];
-
-            progress[13] = (byte)'.';
-            progress[14] = (byte)'.';
-            progress[15] = (byte)' ';
+            progress = fileName.PadRight(13, ' ');
         }
 
-        progress[16] = (byte)'[';
-        progress[17] = 0;
-        Console.Write("%s", progress);
-        for (c = 0; c < 50; c++) Console.WriteLine(".");
-        Console.Write("]\r");
-        Console.Write("%s", progress);
+        progress += ".. ";
+
+        Console.Write($"{progress} [");
+        for (int c = 0; c < 50; c++)
+        {
+            Console.Write(".");
+        }
+
+        Console.WriteLine("]");
+        Console.Write($"{progress} [");
 
         /* read file and place ifs archive */
         long total_read = 0;
         long percent = 0;
+        var beginTick = DateTime.UtcNow.Ticks;
         for (;;)
         {
             int compress_method = method;
@@ -261,14 +263,20 @@ public static class Program
             int bytes_read = ifs.Read(buffer, 0, BLOCK_SIZE);
             if (bytes_read == 0)
                 break;
+
             total_read += bytes_read;
 
             /* for progress */
             if (fsize < (1 << 24))
+            {
                 percent = total_read * 100 / fsize;
+            }
             else
+            {
                 percent = total_read / 256 * 100 / (fsize >> 8);
-            percent >>= 1;
+            }
+
+            percent /= 2;
             while (last_percent < (int)percent)
             {
                 Console.Write("#");
@@ -284,12 +292,12 @@ public static class Program
                 /* FastLZ */
                 case 1:
                 {
-                    int chunk_size = FastLZ.Compress(buffer, 0, bytes_read, result, 0, level);
-                    checksum = update_adler32(1L, result, chunk_size);
-                    write_chunk_header(f, 17, 1, chunk_size, checksum, bytes_read);
-                    f.Write(result, 0, chunk_size);
+                    int chunkSize = FastLZ.Compress(buffer, 0, bytes_read, result, 0, level);
+                    checksum = update_adler32(1L, result, chunkSize);
+                    write_chunk_header(f, 17, 1, chunkSize, checksum, bytes_read);
+                    f.Write(result, 0, chunkSize);
                     total_compressed += 16;
-                    total_compressed += chunk_size;
+                    total_compressed += chunkSize;
                 }
                     break;
 
@@ -324,7 +332,11 @@ public static class Program
                 else
                     percent = total_compressed / 256 * 1000 / (fsize >> 8);
                 percent = 1000 - percent;
-                Console.WriteLine($"{(int)percent / 10:D2}.{(int)percent % 10:D1}%% saved");
+
+                var elapsedTicks = (DateTime.UtcNow.Ticks - beginTick);
+                var elapsedMs = elapsedTicks / TimeSpan.TicksPerMillisecond;
+                var elapsedMicro = elapsedTicks / TimeSpan.TicksPerMicrosecond;
+                Console.WriteLine($"{(int)percent / 10:D2}.{(int)percent % 10:D1}%% saved - {elapsedMs} ms, {elapsedMicro} micro");
             }
 
             Console.WriteLine("");
@@ -339,9 +351,8 @@ public static class Program
         {
             return new FileStream(filePath, mode, access, share);
         }
-        catch (Exception e)
+        catch (Exception)
         {
-            Console.WriteLine(e);
             return null;
         }
     }
@@ -370,7 +381,6 @@ public static class Program
 
         write_magic(ofs);
         result = pack_file_compressed(input_file, 1, compress_level, ofs);
-
         return result;
     }
 
@@ -440,13 +450,13 @@ public static class Program
             for (int j = 0; j < 3; j++)
             {
                 int y = 0;
-                mbs = Environment.TickCount64;
-                while (Environment.TickCount64 == mbs)
+                mbs = DateTime.UtcNow.Ticks;
+                while (DateTime.UtcNow.Ticks == mbs)
                 {
                 }
 
-                mbs = Environment.TickCount64;
-                while (Environment.TickCount64 - mbs < 3000) /* 1% accuracy with 18.2 timer */
+                mbs = DateTime.UtcNow.Ticks;
+                while (DateTime.UtcNow.Ticks - mbs < 3000) /* 1% accuracy with 18.2 timer */
                 {
                     //u = fastlz_compress_level(compress_level, buffer, bytes_read, result);
                     u = FastLZ.Compress(buffer, 0, bytes_read, result, 0, compress_level);
@@ -454,7 +464,7 @@ public static class Program
                 }
 
 
-                mbs = (long)(((double)i * (double)y) / ((double)(Environment.TickCount64 - mbs) / 1000.0d) / 1000000.0d);
+                mbs = (long)(((double)i * (double)y) / ((double)(DateTime.UtcNow.Ticks - mbs) / 1000.0d) / 1000000.0d);
                 /*printf(" %.1f Mbyte/s  ", mbs);*/
                 if (fastest < mbs) fastest = mbs;
             }
@@ -466,20 +476,20 @@ public static class Program
             for (int j = 0; j < 3; j++)
             {
                 int y = 0;
-                mbs = Environment.TickCount64;
-                while (Environment.TickCount64 == mbs)
+                mbs = DateTime.UtcNow.Ticks;
+                while (DateTime.UtcNow.Ticks == mbs)
                 {
                 }
 
-                mbs = Environment.TickCount64;
-                while (Environment.TickCount64 - mbs < 3000) /* 1% accuracy with 18.2 timer */
+                mbs = DateTime.UtcNow.Ticks;
+                while (DateTime.UtcNow.Ticks - mbs < 3000) /* 1% accuracy with 18.2 timer */
                 {
                     //u = fastlz_decompress(result, compressed_size, buffer, bytes_read);
                     u = FastLZ.Decompress(result, 0, compressed_size, buffer, 0, bytes_read);
                     y++;
                 }
 
-                mbs = (long)(((double)i * (double)y) / ((double)(Environment.TickCount64 - mbs) / 1000.0d) / 1000000.0d);
+                mbs = (long)(((double)i * (double)y) / ((double)(DateTime.UtcNow.Ticks - mbs) / 1000.0d) / 1000000.0d);
                 /*printf(" %.1f Mbyte/s  ", mbs);*/
                 if (fastest < mbs) fastest = mbs;
             }
