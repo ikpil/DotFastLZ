@@ -249,7 +249,7 @@ public static class Program
             Console.Write(".");
         }
 
-        Console.WriteLine("]");
+        Console.Write("]\r");
         Console.Write($"{progress} [");
 
         /* read file and place ifs archive */
@@ -336,7 +336,7 @@ public static class Program
                 var elapsedTicks = (DateTime.UtcNow.Ticks - beginTick);
                 var elapsedMs = elapsedTicks / TimeSpan.TicksPerMillisecond;
                 var elapsedMicro = elapsedTicks / TimeSpan.TicksPerMicrosecond;
-                Console.WriteLine($"{(int)percent / 10:D2}.{(int)percent % 10:D1}%% saved - {elapsedMs} ms, {elapsedMicro} micro");
+                Console.Write($"{(int)percent / 10:D2}.{(int)percent % 10:D1}%% saved - {elapsedMs} ms, {elapsedMicro} micro");
             }
 
             Console.WriteLine("");
