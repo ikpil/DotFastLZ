@@ -78,7 +78,7 @@ namespace DotFastLZ.Compression
             ip += 2;
 
             // Main loop
-            while (FASTLZ_LIKELY(ip < ip_limit))
+            while (ip < ip_limit)
             {
                 long refIdx;
                 long distance, cmp;
@@ -91,11 +91,11 @@ namespace DotFastLZ.Compression
                     refIdx = ip_start + htab[hash];
                     htab[hash] = ip - ip_start;
                     distance = ip - refIdx;
-                    cmp = FASTLZ_LIKELY(distance < MAX_L1_DISTANCE)
+                    cmp = distance < MAX_L1_DISTANCE
                         ? flz_readu32(input, refIdx) & 0xffffff
                         : 0x1000000;
 
-                    if (FASTLZ_UNLIKELY(ip >= ip_limit))
+                    if (ip >= ip_limit)
                     {
                         break;
                     }
@@ -103,35 +103,41 @@ namespace DotFastLZ.Compression
                     ++ip;
                 } while (seq != cmp);
 
-                if (FASTLZ_UNLIKELY(ip >= ip_limit))
+                if (ip >= ip_limit)
                 {
                     break;
                 }
 
                 --ip;
 
-                if (FASTLZ_LIKELY(ip > anchor))
+                if (ip > anchor)
                 {
                     op = flz_literals(ip - anchor, input, anchor, output, op);
                 }
 
                 long len = flz_cmp(input, refIdx + 3, input, ip + 3, ip_bound);
                 op = flz1_match(len, distance, output, op);
+                //Console.Write($"{op},");
 
                 // Update the hash at the match boundary
                 ip += len;
                 seq = flz_readu32(input, ip);
                 hash = flz_hash(seq & 0xffffff);
-                htab[hash] = ip;
+                htab[hash] = ip++ - ip_start;
                 seq >>= 8;
                 hash = flz_hash(seq);
-                htab[hash] = ip;
+                htab[hash] = ip++ - ip_start;
 
                 anchor = ip;
             }
 
-            long copy = input.Length - anchor;
+            long copy = length - anchor;
             op = flz_literals(copy, input, anchor, output, op);
+            // for (int i = 0; i < op; ++i)
+            // {
+            //     Console.WriteLine(output[i]);
+            // }
+            //Console.WriteLine($"{op}");
 
             return op;
         }
@@ -191,12 +197,29 @@ namespace DotFastLZ.Compression
             return (ushort)(h & HASH_MASK);
         }
 
+        /* special case of memcpy: at most MAX_COPY bytes */
+        public static void flz_smallcopy(byte[] dest, long destOffset, byte[] src, long srcOffset, long count)
+        {
+            // if (count >= 4)
+            // {
+            //     count -= count % 4;
+            //     Array.Copy(src, srcOffset, dest, destOffset, count);
+            // }
+            Array.Copy(src, srcOffset, dest, destOffset, count);
+        }
+
+        /* special case of memcpy: exactly MAX_COPY bytes */
+        static void flz_maxcopy(byte[] dest, long destOffset, byte[] src, long secOffset)
+        {
+            Array.Copy(src, secOffset, dest, destOffset, MAX_COPY);
+        }
+
         private static long flz_literals(long runs, byte[] src, long srcOffset, byte[] dest, long destOffset)
         {
             while (runs >= MAX_COPY)
             {
                 dest[destOffset++] = MAX_COPY - 1;
-                Array.Copy(src, srcOffset, dest, destOffset, MAX_COPY);
+                flz_maxcopy(dest, destOffset, src, srcOffset);
                 srcOffset += MAX_COPY;
                 destOffset += MAX_COPY;
                 runs -= MAX_COPY;
@@ -205,7 +228,7 @@ namespace DotFastLZ.Compression
             if (runs > 0)
             {
                 dest[destOffset++] = (byte)(runs - 1);
-                Array.Copy(src, srcOffset, dest, destOffset, runs);
+                flz_smallcopy(dest, destOffset, src, srcOffset, runs);
                 destOffset += runs;
             }
 
@@ -215,7 +238,7 @@ namespace DotFastLZ.Compression
         private static long flz1_match(long len, long distance, byte[] output, long op)
         {
             --distance;
-            if (FASTLZ_UNLIKELY(len > MAX_LEN - 2))
+            if (len > MAX_LEN - 2)
             {
                 while (len > MAX_LEN - 2)
                 {
@@ -258,16 +281,6 @@ namespace DotFastLZ.Compression
             }
 
             return pOffset - start;
-        }
-
-        private static bool FASTLZ_UNLIKELY(bool o)
-        {
-            return !o;
-        }
-
-        private static bool FASTLZ_LIKELY(bool o)
-        {
-            return o;
         }
     }
 }
