@@ -89,7 +89,7 @@ namespace DotFastLZ.Compression
             long op = 0;
 
             long[] htab = new long[HASH_SIZE];
-            uint seq, hash;
+            long seq, hash;
 
             // Initializes hash table
             for (hash = 0; hash < HASH_SIZE; ++hash)
@@ -159,9 +159,95 @@ namespace DotFastLZ.Compression
             return op;
         }
 
-        public static int fastlz2_compress(byte[] input, int length, byte[] output)
+        public static long fastlz2_compress(byte[] input, long length, byte[] output)
         {
-            return 0;
+            long ip = 0;
+            long ip_start = ip;
+            long ip_bound = ip + length - 4; /* because readU32 */
+            long ip_limit = ip + length - 12 - 1;
+
+            long op = 0;
+
+            long[] htab = new long[HASH_SIZE];
+            long seq, hash;
+
+            /* initializes hash table */
+            for (hash = 0; hash < HASH_SIZE; ++hash)
+            {
+                htab[hash] = 0;
+            }
+
+            /* we start with literal copy */
+            long anchor = ip;
+            ip += 2;
+
+            /* main loop */
+            while (ip < ip_limit)
+            {
+                long refIdx;
+                long distance, cmp;
+
+                /* find potential match */
+                do
+                {
+                    seq = flz_readu32(input, ip) & 0xffffff;
+                    hash = flz_hash(seq);
+                    refIdx = ip_start + htab[hash];
+                    htab[hash] = ip - ip_start;
+                    distance = ip - refIdx;
+                    cmp = distance < MAX_FARDISTANCE ? flz_readu32(input, refIdx) & 0xffffff : 0x1000000;
+                    if (ip >= ip_limit)
+                    {
+                        break;
+                    }
+
+                    ++ip;
+                } while (seq != cmp);
+
+                if (ip >= ip_limit)
+                {
+                    break;
+                }
+
+                --ip;
+
+                /* far, needs at least 5-byte match */
+                if (distance >= MAX_L2_DISTANCE)
+                {
+                    if (input[refIdx + 3] != input[ip + 3] || input[refIdx + 4] != input[ip + 4])
+                    {
+                        ++ip;
+                        continue;
+                    }
+                }
+
+                if (ip > anchor)
+                {
+                    op = flz_literals(ip - anchor, input, anchor, output, op);
+                }
+
+                long len = flz_cmp(input, refIdx + 3, input, ip + 3, ip_bound);
+                op = flz2_match(len, distance, output, op);
+
+                /* update the hash at match boundary */
+                ip += len;
+                seq = flz_readu32(input, ip);
+                hash = flz_hash(seq & 0xffffff);
+                htab[hash] = ip++ - ip_start;
+                seq >>= 8;
+                hash = flz_hash(seq);
+                htab[hash] = ip++ - ip_start;
+
+                anchor = ip;
+            }
+
+            long copy = length - anchor;
+            op = flz_literals(copy, input, anchor, output,op);
+
+            /* marker for fastlz2 */
+            output[0] |= (1 << 5);
+
+            return op;
         }
 
         /**
@@ -208,9 +294,9 @@ namespace DotFastLZ.Compression
                    ((uint)data[offset + 0] & 0xff);
         }
 
-        private static ushort flz_hash(uint v)
+        private static ushort flz_hash(long v)
         {
-            ulong h = (ulong)(v * 2654435769UL) >> (32 - HASH_LOG);
+            ulong h = ((ulong)v * 2654435769UL) >> (32 - HASH_LOG);
             return (ushort)(h & HASH_MASK);
         }
 
@@ -276,6 +362,58 @@ namespace DotFastLZ.Compression
                 output[op++] = (byte)((7 << 5) + (distance >> 8));
                 output[op++] = (byte)(len - 7);
                 output[op++] = (byte)((distance & 255));
+            }
+
+            return op;
+        }
+
+        private static long flz2_match(long len, long distance, byte[] output, long op)
+        {
+            --distance;
+            if (distance < MAX_L2_DISTANCE)
+            {
+                if (len < 7)
+                {
+                    output[op++] = (byte)((len << 5) + (distance >> 8));
+                    output[op++] = (byte)((distance & 255));
+                }
+                else
+                {
+                    output[op++] = (byte)((7 << 5) + (distance >> 8));
+                    for (len -= 7; len >= 255; len -= 255)
+                    {
+                        output[op++] = 255;
+                    }
+
+                    output[op++] = (byte)(len);
+                    output[op++] = (byte)((distance & 255));
+                }
+            }
+            else
+            {
+                /* far away, but not yet in the another galaxy... */
+                if (len < 7)
+                {
+                    distance -= MAX_L2_DISTANCE;
+                    output[op++] = (byte)((len << 5) + 31);
+                    output[op++] = (byte)(255);
+                    output[op++] = (byte)(distance >> 8);
+                    output[op++] = (byte)(distance & 255);
+                }
+                else
+                {
+                    distance -= MAX_L2_DISTANCE;
+                    output[op++] = (7 << 5) + 31;
+                    for (len -= 7; len >= 255; len -= 255)
+                    {
+                        output[op++] = 255;
+                    }
+
+                    output[op++] = (byte)(len);
+                    output[op++] = (byte)(255);
+                    output[op++] = (byte)(distance >> 8);
+                    output[op++] = (byte)(distance & 255);
+                }
             }
 
             return op;
