@@ -256,7 +256,7 @@ namespace DotFastLZ.Compression
             op = Literals(copy, input, anchor, output, op);
 
             /* marker for fastlz2 */
-            output[0] |= (1 << 5);
+            output[inputOffset] |= (1 << 5);
 
             return op;
         }
@@ -285,7 +285,7 @@ namespace DotFastLZ.Compression
         public static long Decompress(byte[] input, long inputOffset, long length, byte[] output, long outputOffset, long maxout)
         {
             /* magic identifier for compression level */
-            int level = (input[0] >> 5) + 1;
+            int level = (input[inputOffset] >> 5) + 1;
 
             if (level == 1) return DecompressLevel1(input, inputOffset, length, output, outputOffset, maxout);
             if (level == 2) return DecompressLevel2(input, inputOffset, length, output, outputOffset, maxout);
