@@ -202,7 +202,8 @@ public static class TestHelper
         Console.WriteLine("Compressing. Please wait...");
 
         byte[] compressed_buffer = new byte[(int)(1.05 * file_size)];
-        int compressed_size = FastLZ.Compress(file_buffer, 0, (int)file_size, compressed_buffer, 0, 1);
+        //int compressed_size = FastLZ.Compress(file_buffer, 0, (int)file_size, compressed_buffer, 0, 1);
+        long compressed_size = FastLZv2.fastlz1_compress(file_buffer, file_size, compressed_buffer);
         double ratio = (100.0 * compressed_size) / file_size;
         Console.WriteLine($"Compressing was completed: {file_size} -> {compressed_size} ({ratio})");
 

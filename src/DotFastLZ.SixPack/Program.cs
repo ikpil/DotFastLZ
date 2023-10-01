@@ -45,7 +45,7 @@ public static class Program
     /* for Adler-32 checksum algorithm, see RFC 1950 Section 8.2 */
     private const int ADLER32_BASE = 65521;
 
-    private static ulong update_adler32(ulong checksum, byte[] buf, int len)
+    private static ulong update_adler32(ulong checksum, byte[] buf, long len)
     {
         int ptr = 0;
         ulong s1 = checksum & 0xffff;
@@ -292,10 +292,10 @@ public static class Program
                 /* FastLZ */
                 case 1:
                 {
-                    int chunkSize = FastLZ.Compress(buffer, 0, bytes_read, result, 0, level);
+                    long chunkSize = FastLZv2.fastlz_compress_level(level, buffer, bytes_read, result);
                     checksum = update_adler32(1L, result, chunkSize);
                     write_chunk_header(f, 17, 1, chunkSize, checksum, bytes_read);
-                    f.Write(result, 0, chunkSize);
+                    f.Write(result, 0, (int)chunkSize);
                     total_compressed += 16;
                     total_compressed += chunkSize;
                 }
