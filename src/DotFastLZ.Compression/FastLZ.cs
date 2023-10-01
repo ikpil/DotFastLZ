@@ -192,7 +192,7 @@ namespace DotFastLZ.Compression
             /* main loop */
             while (ip < ip_limit)
             {
-                long refIdx;
+                long refs;
                 long distance, cmp;
 
                 /* find potential match */
@@ -200,11 +200,11 @@ namespace DotFastLZ.Compression
                 {
                     seq = ReadUint32(input, ip) & 0xffffff;
                     hash = Hash(seq);
-                    refIdx = ip_start + htab[hash];
+                    refs = ip_start + htab[hash];
                     htab[hash] = ip - ip_start;
-                    distance = ip - refIdx;
+                    distance = ip - refs;
                     cmp = distance < MAX_FARDISTANCE
-                        ? ReadUint32(input, refIdx) & 0xffffff
+                        ? ReadUint32(input, refs) & 0xffffff
                         : 0x1000000;
 
                     if (ip >= ip_limit)
@@ -225,7 +225,7 @@ namespace DotFastLZ.Compression
                 /* far, needs at least 5-byte match */
                 if (distance >= MAX_L2_DISTANCE)
                 {
-                    if (input[refIdx + 3] != input[ip + 3] || input[refIdx + 4] != input[ip + 4])
+                    if (input[refs + 3] != input[ip + 3] || input[refs + 4] != input[ip + 4])
                     {
                         ++ip;
                         continue;
@@ -237,7 +237,7 @@ namespace DotFastLZ.Compression
                     op = Literals(ip - anchor, input, anchor, output, op);
                 }
 
-                long len = MemCompare(input, refIdx + 3, input, ip + 3, ip_bound);
+                long len = MemCompare(input, refs + 3, input, ip + 3, ip_bound);
                 op = MatchLevel2(len, distance, output, op);
 
                 /* update the hash at match boundary */
@@ -317,7 +317,7 @@ namespace DotFastLZ.Compression
                 {
                     long len = (ctrl >> 5) - 1;
                     long ofs = (ctrl & 31) << 8;
-                    long refIdx = op - ofs - 1;
+                    long refs = op - ofs - 1;
                     if (len == 7 - 1)
                     {
                         if (!(ip <= ip_bound))
@@ -328,19 +328,19 @@ namespace DotFastLZ.Compression
                         len += input[ip++];
                     }
 
-                    refIdx -= input[ip++];
+                    refs -= input[ip++];
                     len += 3;
                     if (!(op + len <= op_limit))
                     {
                         return 0;
                     }
 
-                    if (!(refIdx >= outputOffset))
+                    if (!(refs >= outputOffset))
                     {
                         return 0;
                     }
 
-                    MemMove(output, op, output, refIdx, len);
+                    MemMove(output, op, output, refs, len);
                     op += len;
                 }
                 else
