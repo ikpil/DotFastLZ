@@ -351,9 +351,100 @@ namespace DotFastLZ.Compression
             return op;
         }
 
-        public static int fastlz2_decompress(byte[] input, long length, byte[] output, long maxout)
+        public static long fastlz2_decompress(byte[] input, long length, byte[] output, long maxout)
         {
-            return 0;
+            long ip = 0;
+            long ip_limit = ip + length;
+            long ip_bound = ip_limit - 2;
+
+            long opOffset = 0;
+            long op = 0;
+            long op_limit = op + maxout;
+            long ctrl = input[ip++] & 31;
+
+            while (true)
+            {
+                if (ctrl >= 32)
+                {
+                    long len = (ctrl >> 5) - 1;
+                    long ofs = (ctrl & 31) << 8;
+                    long refIdx = op - ofs - 1;
+
+                    long code;
+                    if (len == 7 - 1)
+                    {
+                        do
+                        {
+                            if (!(ip <= ip_bound))
+                            {
+                                return 0;
+                            }
+
+                            code = input[ip++];
+                            len += code;
+                        } while (code == 255);
+                    }
+
+                    code = input[ip++];
+                    refIdx -= code;
+                    len += 3;
+
+                    /* match from 16-bit distance */
+                    if (code == 255)
+                    {
+                        if (ofs == (31 << 8))
+                        {
+                            if (!(ip < ip_bound))
+                            {
+                                return 0;
+                            }
+
+                            ofs = input[ip++] << 8;
+                            ofs += input[ip++];
+                            refIdx = op - ofs - MAX_L2_DISTANCE - 1;
+                        }
+                    }
+
+                    if (!(op + len <= op_limit))
+                    {
+                        return 0;
+                    }
+
+                    if (!(refIdx >= opOffset))
+                    {
+                        return 0;
+                    }
+
+                    fastlz_memmove(output, op, output, refIdx, len);
+                    op += len;
+                }
+                else
+                {
+                    ctrl++;
+                    if (!(op + ctrl <= op_limit))
+                    {
+                        return 0;
+                    }
+
+                    if (!(ip + ctrl <= ip_limit))
+                    {
+                        return 0;
+                    }
+
+                    Array.Copy(input, ip, output, op, ctrl);
+                    ip += ctrl;
+                    op += ctrl;
+                }
+
+                if (ip >= ip_limit)
+                {
+                    break;
+                }
+
+                ctrl = input[ip++];
+            }
+
+            return op;
         }
 
         public static uint flz_readu32(byte[] data, long offset)
