@@ -2,10 +2,10 @@
 
 public static class RefImpl
 {
-    public static void REF_Level1_decompress(byte[] input, int length, byte[] output)
+    public static void REF_Level1_decompress(byte[] input, long length, byte[] output)
     {
-        int src = 0;
-        int dest = 0;
+        long src = 0;
+        long dest = 0;
         while (src < length)
         {
             int type = input[src] >> 5;
@@ -28,11 +28,11 @@ public static class RefImpl
                 int ofs = 256 * (input[src] & 31) + input[src + 1];
                 int len = 2 + (input[src] >> 5);
                 src = src + 2;
-                int @ref = dest - ofs - 1;
+                long @ref = dest - ofs - 1;
                 while (len > 0)
                 {
                     output[dest] = output[@ref];
-                    @ref = @ref +1;
+                    @ref = @ref + 1;
                     dest = dest + 1;
                     len = len - 1;
                 }
@@ -43,7 +43,7 @@ public static class RefImpl
                 int ofs = 256 * (input[src] & 31) + input[src + 2];
                 int len = 9 + input[src + 1];
                 src = src + 3;
-                int @ref = dest - ofs - 1;
+                long @ref = dest - ofs - 1;
                 while (len > 0)
                 {
                     output[dest] = output[@ref];
@@ -55,10 +55,10 @@ public static class RefImpl
         }
     }
 
-    public static void REF_Level2_decompress(byte[] input, int length, byte[] output)
+    public static void REF_Level2_decompress(byte[] input, long length, byte[] output)
     {
-        int src = 0;
-        int dest = 0;
+        long src = 0;
+        long dest = 0;
         while (src < length)
         {
             int type = input[src] >> 5;
@@ -107,7 +107,7 @@ public static class RefImpl
 
                 src = src + next;
 
-                int @ref = dest - ofs - 1;
+                long @ref = dest - ofs - 1;
                 while (len > 0)
                 {
                     output[dest] = output[@ref];

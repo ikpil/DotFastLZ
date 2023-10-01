@@ -292,7 +292,7 @@ public static class Program
                 /* FastLZ */
                 case 1:
                 {
-                    long chunkSize = FastLZv2.fastlz_compress_level(level, buffer, bytes_read, result);
+                    long chunkSize = FastLZ.fastlz_compress_level(level, buffer, bytes_read, result);
                     checksum = update_adler32(1L, result, chunkSize);
                     write_chunk_header(f, 17, 1, chunkSize, checksum, bytes_read);
                     f.Write(result, 0, (int)chunkSize);
@@ -444,7 +444,7 @@ public static class Program
 
             Console.WriteLine($"Benchmarking FastLZ Level {compress_level}, please wait...");
 
-            int u = 0;
+            long u = 0;
             int i = bytes_read;
             fastest = 0;
             for (int j = 0; j < 3; j++)
@@ -458,8 +458,7 @@ public static class Program
                 mbs = DateTime.UtcNow.Ticks;
                 while (DateTime.UtcNow.Ticks - mbs < 3000) /* 1% accuracy with 18.2 timer */
                 {
-                    //u = fastlz_compress_level(compress_level, buffer, bytes_read, result);
-                    u = FastLZ.Compress(buffer, 0, bytes_read, result, 0, compress_level);
+                    u = FastLZ.fastlz_compress_level(compress_level, buffer, bytes_read, result);
                     y++;
                 }
 
@@ -472,7 +471,7 @@ public static class Program
             Console.WriteLine($"Compressed {i} bytes into {u} bytes ({(u * 100.0 / i):F1}%) at {fastest:F1} Mbyte/s.");
 
             fastest = 0;
-            int compressed_size = u;
+            long compressed_size = u;
             for (int j = 0; j < 3; j++)
             {
                 int y = 0;
@@ -484,8 +483,7 @@ public static class Program
                 mbs = DateTime.UtcNow.Ticks;
                 while (DateTime.UtcNow.Ticks - mbs < 3000) /* 1% accuracy with 18.2 timer */
                 {
-                    //u = fastlz_decompress(result, compressed_size, buffer, bytes_read);
-                    u = FastLZ.Decompress(result, 0, compressed_size, buffer, 0, bytes_read);
+                    u = FastLZ.fastlz_decompress(result, compressed_size, buffer, bytes_read);
                     y++;
                 }
 
@@ -538,7 +536,7 @@ public static class Program
             if (argument == "-v" || argument == "--version")
             {
                 Console.WriteLine("6pack: high-speed file compression tool");
-                Console.WriteLine($"Version {SIXPACK_VERSION_STRING} (using FastLZ {FastLZ.VERSION_STRING})");
+                Console.WriteLine($"Version {SIXPACK_VERSION_STRING} (using FastLZ {FastLZ.FASTLZ_VERSION_STRING})");
                 Console.WriteLine("Copyright (C) Ariya Hidayat, Choi Ikpil(ikpil@naver.com");
                 Console.WriteLine("");
                 return 0;
