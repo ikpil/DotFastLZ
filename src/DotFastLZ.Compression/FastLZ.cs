@@ -64,22 +64,24 @@ namespace DotFastLZ.Compression
           Note that the compressed data, regardless of the level, can always be
           decompressed using the function fastlz_decompress below.
         */
-        public static long fastlz_compress_level(int level, byte[] input, long length, byte[] output)
+        // fastlz_compress
+        public static long CompressLevel(int level, byte[] input, long length, byte[] output)
         {
             if (level == 1)
             {
-                return fastlz1_compress(input, length, output);
+                return CompressLevel1(input, length, output);
             }
 
             if (level == 2)
             {
-                return fastlz2_compress(input, length, output);
+                return CompressLevel2(input, length, output);
             }
 
             return 0;
         }
 
-        public static long fastlz1_compress(byte[] input, long length, byte[] output)
+        // fastlz1_compress
+        public static long CompressLevel1(byte[] input, long length, byte[] output)
         {
             long ip = 0;
             long ip_start = ip;
@@ -110,13 +112,13 @@ namespace DotFastLZ.Compression
                 // Find potential match
                 do
                 {
-                    seq = flz_readu32(input, ip) & 0xffffff;
-                    hash = flz_hash(seq);
+                    seq = ReadUint32(input, ip) & 0xffffff;
+                    hash = Hash(seq);
                     refIdx = ip_start + htab[hash];
                     htab[hash] = ip - ip_start;
                     distance = ip - refIdx;
                     cmp = distance < MAX_L1_DISTANCE
-                        ? flz_readu32(input, refIdx) & 0xffffff
+                        ? ReadUint32(input, refIdx) & 0xffffff
                         : 0x1000000;
 
                     if (ip >= ip_limit)
@@ -136,30 +138,31 @@ namespace DotFastLZ.Compression
 
                 if (ip > anchor)
                 {
-                    op = flz_literals(ip - anchor, input, anchor, output, op);
+                    op = Literals(ip - anchor, input, anchor, output, op);
                 }
 
-                long len = flz_cmp(input, refIdx + 3, input, ip + 3, ip_bound);
-                op = flz1_match(len, distance, output, op);
+                long len = MemCompare(input, refIdx + 3, input, ip + 3, ip_bound);
+                op = MatchLevel1(len, distance, output, op);
 
                 // Update the hash at the match boundary
                 ip += len;
-                seq = flz_readu32(input, ip);
-                hash = flz_hash(seq & 0xffffff);
+                seq = ReadUint32(input, ip);
+                hash = Hash(seq & 0xffffff);
                 htab[hash] = ip++ - ip_start;
                 seq >>= 8;
-                hash = flz_hash(seq);
+                hash = Hash(seq);
                 htab[hash] = ip++ - ip_start;
 
                 anchor = ip;
             }
 
             long copy = length - anchor;
-            op = flz_literals(copy, input, anchor, output, op);
+            op = Literals(copy, input, anchor, output, op);
             return op;
         }
 
-        public static long fastlz2_compress(byte[] input, long length, byte[] output)
+        // fastlz2_compress
+        public static long CompressLevel2(byte[] input, long length, byte[] output)
         {
             long ip = 0;
             long ip_start = ip;
@@ -190,13 +193,13 @@ namespace DotFastLZ.Compression
                 /* find potential match */
                 do
                 {
-                    seq = flz_readu32(input, ip) & 0xffffff;
-                    hash = flz_hash(seq);
+                    seq = ReadUint32(input, ip) & 0xffffff;
+                    hash = Hash(seq);
                     refIdx = ip_start + htab[hash];
                     htab[hash] = ip - ip_start;
                     distance = ip - refIdx;
                     cmp = distance < MAX_FARDISTANCE
-                        ? flz_readu32(input, refIdx) & 0xffffff
+                        ? ReadUint32(input, refIdx) & 0xffffff
                         : 0x1000000;
 
                     if (ip >= ip_limit)
@@ -226,26 +229,26 @@ namespace DotFastLZ.Compression
 
                 if (ip > anchor)
                 {
-                    op = flz_literals(ip - anchor, input, anchor, output, op);
+                    op = Literals(ip - anchor, input, anchor, output, op);
                 }
 
-                long len = flz_cmp(input, refIdx + 3, input, ip + 3, ip_bound);
-                op = flz2_match(len, distance, output, op);
+                long len = MemCompare(input, refIdx + 3, input, ip + 3, ip_bound);
+                op = MatchLevel2(len, distance, output, op);
 
                 /* update the hash at match boundary */
                 ip += len;
-                seq = flz_readu32(input, ip);
-                hash = flz_hash(seq & 0xffffff);
+                seq = ReadUint32(input, ip);
+                hash = Hash(seq & 0xffffff);
                 htab[hash] = ip++ - ip_start;
                 seq >>= 8;
-                hash = flz_hash(seq);
+                hash = Hash(seq);
                 htab[hash] = ip++ - ip_start;
 
                 anchor = ip;
             }
 
             long copy = length - anchor;
-            op = flz_literals(copy, input, anchor, output, op);
+            op = Literals(copy, input, anchor, output, op);
 
             /* marker for fastlz2 */
             output[0] |= (1 << 5);
@@ -268,18 +271,20 @@ namespace DotFastLZ.Compression
           compression level specified in fastlz_compress_level above (when
           producing the compressed block).
          */
-        public static long fastlz_decompress(byte[] input, long length, byte[] output, long maxout)
+        // fastlz_decompress
+        public static long Decompress(byte[] input, long length, byte[] output, long maxout)
         {
             /* magic identifier for compression level */
             int level = (input[0] >> 5) + 1;
 
-            if (level == 1) return fastlz1_decompress(input, length, output, maxout);
-            if (level == 2) return fastlz2_decompress(input, length, output, maxout);
+            if (level == 1) return DecompressLevel1(input, length, output, maxout);
+            if (level == 2) return DecompressLevel2(input, length, output, maxout);
 
             return 0;
         }
 
-        public static long fastlz1_decompress(byte[] input, long length, byte[] output, long maxout)
+        // fastlz1_decompress
+        public static long DecompressLevel1(byte[] input, long length, byte[] output, long maxout)
         {
             long ip = 0;
             long ip_limit = ip + length;
@@ -319,7 +324,7 @@ namespace DotFastLZ.Compression
                         return 0;
                     }
 
-                    fastlz_memmove(output, op, output, refIdx, len);
+                    MemMove(output, op, output, refIdx, len);
                     op += len;
                 }
                 else
@@ -351,7 +356,8 @@ namespace DotFastLZ.Compression
             return op;
         }
 
-        public static long fastlz2_decompress(byte[] input, long length, byte[] output, long maxout)
+        // fastlz2_decompress
+        public static long DecompressLevel2(byte[] input, long length, byte[] output, long maxout)
         {
             long ip = 0;
             long ip_limit = ip + length;
@@ -415,7 +421,7 @@ namespace DotFastLZ.Compression
                         return 0;
                     }
 
-                    fastlz_memmove(output, op, output, refIdx, len);
+                    MemMove(output, op, output, refIdx, len);
                     op += len;
                 }
                 else
@@ -447,7 +453,8 @@ namespace DotFastLZ.Compression
             return op;
         }
 
-        public static uint flz_readu32(byte[] data, long offset)
+        // flz_readu32
+        public static uint ReadUint32(byte[] data, long offset)
         {
             return ((uint)data[offset + 3] & 0xff) << 24 |
                    ((uint)data[offset + 2] & 0xff) << 16 |
@@ -455,14 +462,16 @@ namespace DotFastLZ.Compression
                    ((uint)data[offset + 0] & 0xff);
         }
 
-        public static ushort flz_hash(long v)
+        // flz_hash
+        public static ushort Hash(long v)
         {
             ulong h = ((ulong)v * 2654435769UL) >> (32 - HASH_LOG);
             return (ushort)(h & HASH_MASK);
         }
 
-        /* special case of memcpy: at most MAX_COPY bytes */
-        public static void flz_smallcopy(byte[] dest, long destOffset, byte[] src, long srcOffset, long count)
+        // special case of memcpy: at most MAX_COPY bytes
+        // flz_smallcopy
+        public static void SmallCopy(byte[] dest, long destOffset, byte[] src, long srcOffset, long count)
         {
             // if (count >= 4)
             // {
@@ -472,18 +481,20 @@ namespace DotFastLZ.Compression
             Array.Copy(src, srcOffset, dest, destOffset, count);
         }
 
-        /* special case of memcpy: exactly MAX_COPY bytes */
-        static void flz_maxcopy(byte[] dest, long destOffset, byte[] src, long secOffset)
+        // special case of memcpy: exactly MAX_COPY bytes
+        // flz_maxcopy
+        static void MaxCopy(byte[] dest, long destOffset, byte[] src, long secOffset)
         {
             Array.Copy(src, secOffset, dest, destOffset, MAX_COPY);
         }
 
-        public static long flz_literals(long runs, byte[] src, long srcOffset, byte[] dest, long destOffset)
+        // flz_literals
+        public static long Literals(long runs, byte[] src, long srcOffset, byte[] dest, long destOffset)
         {
             while (runs >= MAX_COPY)
             {
                 dest[destOffset++] = MAX_COPY - 1;
-                flz_maxcopy(dest, destOffset, src, srcOffset);
+                MaxCopy(dest, destOffset, src, srcOffset);
                 srcOffset += MAX_COPY;
                 destOffset += MAX_COPY;
                 runs -= MAX_COPY;
@@ -492,14 +503,15 @@ namespace DotFastLZ.Compression
             if (runs > 0)
             {
                 dest[destOffset++] = (byte)(runs - 1);
-                flz_smallcopy(dest, destOffset, src, srcOffset, runs);
+                SmallCopy(dest, destOffset, src, srcOffset, runs);
                 destOffset += runs;
             }
 
             return destOffset;
         }
 
-        public static long flz1_match(long len, long distance, byte[] output, long op)
+        // flz1_match
+        public static long MatchLevel1(long len, long distance, byte[] output, long op)
         {
             --distance;
             if (len > MAX_LEN - 2)
@@ -528,7 +540,8 @@ namespace DotFastLZ.Compression
             return op;
         }
 
-        public static long flz2_match(long len, long distance, byte[] output, long op)
+        // flz2_match
+        public static long MatchLevel2(long len, long distance, byte[] output, long op)
         {
             --distance;
             if (distance < MAX_L2_DISTANCE)
@@ -580,11 +593,12 @@ namespace DotFastLZ.Compression
             return op;
         }
 
-        public static long flz_cmp(byte[] p, long pOffset, byte[] q, long qOffset, long r)
+        // flz_cmp
+        public static long MemCompare(byte[] p, long pOffset, byte[] q, long qOffset, long r)
         {
             long start = pOffset;
 
-            if (flz_readu32(p, pOffset) == flz_readu32(q, qOffset))
+            if (ReadUint32(p, pOffset) == ReadUint32(q, qOffset))
             {
                 pOffset += 4;
                 qOffset += 4;
@@ -599,7 +613,8 @@ namespace DotFastLZ.Compression
             return pOffset - start;
         }
 
-        public static void fastlz_memmove(byte[] dest, long destOffset, byte[] src, long srcOffset, long count)
+        // fastlz_memmove
+        public static void MemMove(byte[] dest, long destOffset, byte[] src, long srcOffset, long count)
         {
             if (dest.Length < destOffset + count)
             {
