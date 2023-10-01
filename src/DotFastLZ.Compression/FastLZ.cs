@@ -639,5 +639,11 @@ namespace DotFastLZ.Compression
                 dest[destOffset + i] = src[srcOffset + i];
             }
         }
+        
+        public static long EstimateCompressedSize(long size)
+        {
+            long estimatedSize = (long)Math.Ceiling(size * 1.06f);
+            return Math.Max(estimatedSize, 66);
+        }
     }
 }
