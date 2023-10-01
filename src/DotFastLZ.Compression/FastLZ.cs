@@ -67,23 +67,28 @@ namespace DotFastLZ.Compression
         // fastlz_compress
         public static long CompressLevel(int level, byte[] input, long length, byte[] output)
         {
+            return CompressLevel(level, input, 0, length, output);
+        }
+
+        public static long CompressLevel(int level, byte[] input, long inputOffset, long length, byte[] output)
+        {
             if (level == 1)
             {
-                return CompressLevel1(input, length, output);
+                return CompressLevel1(input, inputOffset, length, output);
             }
 
             if (level == 2)
             {
-                return CompressLevel2(input, length, output);
+                return CompressLevel2(input, inputOffset, length, output);
             }
 
             return 0;
         }
 
         // fastlz1_compress
-        public static long CompressLevel1(byte[] input, long length, byte[] output)
+        public static long CompressLevel1(byte[] input, long inputOffset, long length, byte[] output)
         {
-            long ip = 0;
+            long ip = inputOffset;
             long ip_start = ip;
             long ip_bound = ip + length - 4;
             long ip_limit = ip + length - 12 - 1;
@@ -162,9 +167,9 @@ namespace DotFastLZ.Compression
         }
 
         // fastlz2_compress
-        public static long CompressLevel2(byte[] input, long length, byte[] output)
+        public static long CompressLevel2(byte[] input, long inputOffset, long length, byte[] output)
         {
-            long ip = 0;
+            long ip = inputOffset;
             long ip_start = ip;
             long ip_bound = ip + length - 4; /* because readU32 */
             long ip_limit = ip + length - 12 - 1;
@@ -274,24 +279,28 @@ namespace DotFastLZ.Compression
         // fastlz_decompress
         public static long Decompress(byte[] input, long length, byte[] output, long maxout)
         {
+            return Decompress(input, 0, length, output, 0, maxout);
+        }
+
+        public static long Decompress(byte[] input, long inputOffset, long length, byte[] output, long outputOffset, long maxout)
+        {
             /* magic identifier for compression level */
             int level = (input[0] >> 5) + 1;
 
-            if (level == 1) return DecompressLevel1(input, length, output, maxout);
-            if (level == 2) return DecompressLevel2(input, length, output, maxout);
+            if (level == 1) return DecompressLevel1(input, inputOffset, length, output, outputOffset, maxout);
+            if (level == 2) return DecompressLevel2(input, inputOffset, length, output, outputOffset, maxout);
 
             return 0;
         }
 
         // fastlz1_decompress
-        public static long DecompressLevel1(byte[] input, long length, byte[] output, long maxout)
+        public static long DecompressLevel1(byte[] input, long inputOffset, long length, byte[] output, long outputOffset, long maxout)
         {
-            long ip = 0;
+            long ip = inputOffset;
             long ip_limit = ip + length;
             long ip_bound = ip_limit - 2;
 
-            long opOffset = 0;
-            long op = 0;
+            long op = outputOffset;
             long op_limit = op + maxout;
             long ctrl = input[ip++] & 31;
 
@@ -319,7 +328,7 @@ namespace DotFastLZ.Compression
                         return 0;
                     }
 
-                    if (!(refIdx >= opOffset))
+                    if (!(refIdx >= outputOffset))
                     {
                         return 0;
                     }
@@ -357,14 +366,13 @@ namespace DotFastLZ.Compression
         }
 
         // fastlz2_decompress
-        public static long DecompressLevel2(byte[] input, long length, byte[] output, long maxout)
+        public static long DecompressLevel2(byte[] input, long inputOffset, long length, byte[] output, long outputOffset, long maxout)
         {
-            long ip = 0;
+            long ip = inputOffset;
             long ip_limit = ip + length;
             long ip_bound = ip_limit - 2;
 
-            long opOffset = 0;
-            long op = 0;
+            long op = outputOffset;
             long op_limit = op + maxout;
             long ctrl = input[ip++] & 31;
 
@@ -416,7 +424,7 @@ namespace DotFastLZ.Compression
                         return 0;
                     }
 
-                    if (!(refIdx >= opOffset))
+                    if (!(refIdx >= outputOffset))
                     {
                         return 0;
                     }
