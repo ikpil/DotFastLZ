@@ -232,16 +232,16 @@ public static class Program
 
         /* for progress status */
         string progress;
-        if (13 < fileName.Length)
+        if (16 < fileName.Length)
         {
             progress = fileName.Substring(0, 13);
+            progress += ".. ";
         }
         else
         {
-            progress = fileName.PadRight(13, ' ');
+            progress = fileName.PadRight(16, ' ');
         }
 
-        progress += ".. ";
 
         Console.Write($"{progress} [");
         for (int c = 0; c < 50; c++)
@@ -324,19 +324,24 @@ public static class Program
         }
         else
         {
-            Console.WriteLine("] ");
+            Console.Write("] ");
             if (total_compressed < fsize)
             {
                 if (fsize < (1 << 20))
+                {
                     percent = total_compressed * 1000 / fsize;
+                }
                 else
+                {
                     percent = total_compressed / 256 * 1000 / (fsize >> 8);
+                }
+
                 percent = 1000 - percent;
 
                 var elapsedTicks = (DateTime.UtcNow.Ticks - beginTick);
                 var elapsedMs = elapsedTicks / TimeSpan.TicksPerMillisecond;
                 var elapsedMicro = elapsedTicks / TimeSpan.TicksPerMicrosecond;
-                Console.Write($"{(int)percent / 10:D2}.{(int)percent % 10:D1}%% saved - {elapsedMs} ms, {elapsedMicro} micro");
+                Console.Write($"{(int)percent / 10:D2}.{(int)percent % 10:D1}% saved - {elapsedMs} ms, {elapsedMicro} micro");
             }
 
             Console.WriteLine("");
