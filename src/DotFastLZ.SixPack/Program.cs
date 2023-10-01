@@ -292,7 +292,7 @@ public static class Program
                 /* FastLZ */
                 case 1:
                 {
-                    long chunkSize = FastLZ.fastlz_compress_level(level, buffer, bytes_read, result);
+                    long chunkSize = FastLZ.CompressLevel(level, buffer, bytes_read, result);
                     checksum = update_adler32(1L, result, chunkSize);
                     write_chunk_header(f, 17, 1, chunkSize, checksum, bytes_read);
                     f.Write(result, 0, (int)chunkSize);
@@ -463,7 +463,7 @@ public static class Program
                 mbs = DateTime.UtcNow.Ticks;
                 while (DateTime.UtcNow.Ticks - mbs < 3000) /* 1% accuracy with 18.2 timer */
                 {
-                    u = FastLZ.fastlz_compress_level(compress_level, buffer, bytes_read, result);
+                    u = FastLZ.CompressLevel(compress_level, buffer, bytes_read, result);
                     y++;
                 }
 
@@ -488,7 +488,7 @@ public static class Program
                 mbs = DateTime.UtcNow.Ticks;
                 while (DateTime.UtcNow.Ticks - mbs < 3000) /* 1% accuracy with 18.2 timer */
                 {
-                    u = FastLZ.fastlz_decompress(result, compressed_size, buffer, bytes_read);
+                    u = FastLZ.Decompress(result, compressed_size, buffer, bytes_read);
                     y++;
                 }
 
