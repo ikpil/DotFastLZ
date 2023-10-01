@@ -217,7 +217,7 @@ public static class TestHelper
 
         Array.Fill(uncompressed_buffer, (byte)'-');
 
-        FastLZ.Decompress(compressed_buffer, 0, compressed_buffer.Length, uncompressed_buffer, 0, uncompressed_buffer.Length);
+        FastLZv2.fastlz1_decompress(compressed_buffer, compressed_size, uncompressed_buffer, uncompressed_buffer.Length);
 
         Console.WriteLine("Comparing. Please wait...");
         long result = ResourceHelper.Compare(file_name, file_buffer, uncompressed_buffer, file_size);

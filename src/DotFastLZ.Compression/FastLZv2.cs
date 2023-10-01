@@ -64,7 +64,7 @@ namespace DotFastLZ.Compression
           Note that the compressed data, regardless of the level, can always be
           decompressed using the function fastlz_decompress below.
         */
-        public static long fastlz_compress_level(int level, byte[] input, int length, byte[] output)
+        public static long fastlz_compress_level(int level, byte[] input, long length, byte[] output)
         {
             if (level == 1)
             {
@@ -195,7 +195,10 @@ namespace DotFastLZ.Compression
                     refIdx = ip_start + htab[hash];
                     htab[hash] = ip - ip_start;
                     distance = ip - refIdx;
-                    cmp = distance < MAX_FARDISTANCE ? flz_readu32(input, refIdx) & 0xffffff : 0x1000000;
+                    cmp = distance < MAX_FARDISTANCE
+                        ? flz_readu32(input, refIdx) & 0xffffff
+                        : 0x1000000;
+
                     if (ip >= ip_limit)
                     {
                         break;
@@ -242,7 +245,7 @@ namespace DotFastLZ.Compression
             }
 
             long copy = length - anchor;
-            op = flz_literals(copy, input, anchor, output,op);
+            op = flz_literals(copy, input, anchor, output, op);
 
             /* marker for fastlz2 */
             output[0] |= (1 << 5);
@@ -265,7 +268,7 @@ namespace DotFastLZ.Compression
           compression level specified in fastlz_compress_level above (when
           producing the compressed block).
          */
-        public static int fastlz_decompress(byte[] input, int length, byte[] output, int maxout)
+        public static long fastlz_decompress(byte[] input, long length, byte[] output, long maxout)
         {
             /* magic identifier for compression level */
             int level = (input[0] >> 5) + 1;
@@ -276,17 +279,84 @@ namespace DotFastLZ.Compression
             return 0;
         }
 
-        public static int fastlz1_decompress(byte[] input, int length, byte[] output, int maxout)
+        public static long fastlz1_decompress(byte[] input, long length, byte[] output, long maxout)
+        {
+            long ip = 0;
+            long ip_limit = ip + length;
+            long ip_bound = ip_limit - 2;
+
+            long opOffset = 0;
+            long op = 0;
+            long op_limit = op + maxout;
+            long ctrl = input[ip++] & 31;
+
+            while (true)
+            {
+                if (ctrl >= 32)
+                {
+                    long len = (ctrl >> 5) - 1;
+                    long ofs = (ctrl & 31) << 8;
+                    long refIdx = op - ofs - 1;
+                    if (len == 7 - 1)
+                    {
+                        if (!(ip <= ip_bound))
+                        {
+                            return 0;
+                        }
+
+                        len += input[ip++];
+                    }
+
+                    refIdx -= input[ip++];
+                    len += 3;
+                    if (!(op + len <= op_limit))
+                    {
+                        return 0;
+                    }
+
+                    if (!(refIdx >= opOffset))
+                    {
+                        return 0;
+                    }
+
+                    fastlz_memmove(output, op, output, refIdx, len);
+                    op += len;
+                }
+                else
+                {
+                    ctrl++;
+                    if (!(op + ctrl <= op_limit))
+                    {
+                        return 0;
+                    }
+
+                    if (!(ip + ctrl <= ip_limit))
+                    {
+                        return 0;
+                    }
+
+                    Array.Copy(input, ip, output, op, ctrl);
+                    ip += ctrl;
+                    op += ctrl;
+                }
+
+                if (ip > ip_bound)
+                {
+                    break;
+                }
+
+                ctrl = input[ip++];
+            }
+
+            return op;
+        }
+
+        public static int fastlz2_decompress(byte[] input, long length, byte[] output, long maxout)
         {
             return 0;
         }
 
-        public static int fastlz2_decompress(byte[] input, int length, byte[] output, int maxout)
-        {
-            return 0;
-        }
-
-        private static uint flz_readu32(byte[] data, long offset)
+        public static uint flz_readu32(byte[] data, long offset)
         {
             return ((uint)data[offset + 3] & 0xff) << 24 |
                    ((uint)data[offset + 2] & 0xff) << 16 |
@@ -294,7 +364,7 @@ namespace DotFastLZ.Compression
                    ((uint)data[offset + 0] & 0xff);
         }
 
-        private static ushort flz_hash(long v)
+        public static ushort flz_hash(long v)
         {
             ulong h = ((ulong)v * 2654435769UL) >> (32 - HASH_LOG);
             return (ushort)(h & HASH_MASK);
@@ -317,7 +387,7 @@ namespace DotFastLZ.Compression
             Array.Copy(src, secOffset, dest, destOffset, MAX_COPY);
         }
 
-        private static long flz_literals(long runs, byte[] src, long srcOffset, byte[] dest, long destOffset)
+        public static long flz_literals(long runs, byte[] src, long srcOffset, byte[] dest, long destOffset)
         {
             while (runs >= MAX_COPY)
             {
@@ -338,7 +408,7 @@ namespace DotFastLZ.Compression
             return destOffset;
         }
 
-        private static long flz1_match(long len, long distance, byte[] output, long op)
+        public static long flz1_match(long len, long distance, byte[] output, long op)
         {
             --distance;
             if (len > MAX_LEN - 2)
@@ -367,7 +437,7 @@ namespace DotFastLZ.Compression
             return op;
         }
 
-        private static long flz2_match(long len, long distance, byte[] output, long op)
+        public static long flz2_match(long len, long distance, byte[] output, long op)
         {
             --distance;
             if (distance < MAX_L2_DISTANCE)
@@ -419,7 +489,7 @@ namespace DotFastLZ.Compression
             return op;
         }
 
-        private static long flz_cmp(byte[] p, long pOffset, byte[] q, long qOffset, long r)
+        public static long flz_cmp(byte[] p, long pOffset, byte[] q, long qOffset, long r)
         {
             long start = pOffset;
 
@@ -436,6 +506,24 @@ namespace DotFastLZ.Compression
             }
 
             return pOffset - start;
+        }
+
+        public static void fastlz_memmove(byte[] dest, long destOffset, byte[] src, long srcOffset, long count)
+        {
+            if (dest.Length < destOffset + count)
+            {
+                throw new IndexOutOfRangeException($"{dest.Length} < {destOffset} + {count}");
+            }
+
+            if (src.Length < srcOffset + count)
+            {
+                throw new IndexOutOfRangeException($"{src.Length} < {srcOffset} + {count}");
+            }
+
+            for (long i = 0; i < count; ++i)
+            {
+                dest[destOffset + i] = src[srcOffset + i];
+            }
         }
     }
 }
