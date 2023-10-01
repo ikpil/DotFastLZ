@@ -203,7 +203,7 @@ public static class TestHelper
 
         byte[] compressed_buffer = new byte[(int)(1.05 * file_size)];
         //int compressed_size = FastLZ.Compress(file_buffer, 0, (int)file_size, compressed_buffer, 0, 1);
-        long compressed_size = FastLZ.CompressLevel1(file_buffer, file_size, compressed_buffer);
+        long compressed_size = FastLZ.CompressLevel1(file_buffer, 0, file_size, compressed_buffer);
         double ratio = (100.0 * compressed_size) / file_size;
         Console.WriteLine($"Compressing was completed: {file_size} -> {compressed_size} ({ratio})");
 
@@ -217,7 +217,7 @@ public static class TestHelper
 
         Array.Fill(uncompressed_buffer, (byte)'-');
 
-        FastLZ.DecompressLevel1(compressed_buffer, compressed_size, uncompressed_buffer, uncompressed_buffer.Length);
+        FastLZ.DecompressLevel1(compressed_buffer, 0, compressed_size, uncompressed_buffer, 0, uncompressed_buffer.Length);
 
         Console.WriteLine("Comparing. Please wait...");
         long result = ResourceHelper.Compare(file_name, file_buffer, uncompressed_buffer, file_size);
@@ -270,7 +270,7 @@ public static class TestHelper
 
         byte[] compressed_buffer = new byte[(int)(1.05 * file_size)];
         //int compressed_size = FastLZ.Compress(file_buffer, 0, (int)file_size, compressed_buffer, 0, 2);
-        long compressed_size = FastLZ.CompressLevel2(file_buffer, file_size, compressed_buffer);
+        long compressed_size = FastLZ.CompressLevel2(file_buffer, 0, file_size, compressed_buffer);
         double ratio = (100.0 * compressed_size) / file_size;
         Console.WriteLine($"Compressing was completed: {file_size} -> {compressed_size} ({ratio})");
 
@@ -285,7 +285,7 @@ public static class TestHelper
         Array.Fill(uncompressed_buffer, (byte)'-');
 
         //FastLZ.Decompress(compressed_buffer, 0, compressed_buffer.Length, uncompressed_buffer, 0, uncompressed_buffer.Length);
-        FastLZ.DecompressLevel2(compressed_buffer, compressed_size, uncompressed_buffer, uncompressed_buffer.Length);
+        FastLZ.DecompressLevel2(compressed_buffer, 0, compressed_size, uncompressed_buffer, 0, uncompressed_buffer.Length);
 
         Console.WriteLine("Comparing. Please wait...");
         long result = ResourceHelper.Compare(file_name, file_buffer, uncompressed_buffer, file_size);
