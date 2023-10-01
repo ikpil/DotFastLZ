@@ -1,4 +1,28 @@
-﻿using System;
+﻿/*
+  FastLZ - Byte-aligned LZ77 compression library
+  Copyright (C) 2005-2020 Ariya Hidayat <ariya.hidayat@gmail.com>
+  Copyright (C) 2023 Choi Ikpil <ikpil@naver.com> https://github.com/ikpil/DotFastLZ
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+  THE SOFTWARE.
+*/
+
+using System;
 
 namespace DotFastLZ.Compression
 {
@@ -117,7 +141,6 @@ namespace DotFastLZ.Compression
 
                 long len = flz_cmp(input, refIdx + 3, input, ip + 3, ip_bound);
                 op = flz1_match(len, distance, output, op);
-                //Console.Write($"{op},");
 
                 // Update the hash at the match boundary
                 ip += len;
@@ -133,12 +156,6 @@ namespace DotFastLZ.Compression
 
             long copy = length - anchor;
             op = flz_literals(copy, input, anchor, output, op);
-            // for (int i = 0; i < op; ++i)
-            // {
-            //     Console.WriteLine(output[i]);
-            // }
-            //Console.WriteLine($"{op}");
-
             return op;
         }
 

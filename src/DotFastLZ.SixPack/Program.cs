@@ -1,7 +1,7 @@
 ﻿/*
   6PACK - file compressor using FastLZ (lightning-fast compression library)
   Copyright (C) 2007-2020 Ariya Hidayat <ariya.hidayat@gmail.com>
-  Copyright (C) 2023 Choi Ikpil <ikpil@naver.com>
+  Copyright (C) 2023 Choi Ikpil <ikpil@naver.com> https://github.com/ikpil/DotFastLz
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
