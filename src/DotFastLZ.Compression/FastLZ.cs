@@ -82,7 +82,7 @@ namespace DotFastLZ.Compression
                 return CompressLevel2(input, inputOffset, length, output);
             }
 
-            return 0;
+            throw new Exception($"invalid level: {level} (expected: 1 or 2)");
         }
 
         // fastlz1_compress
@@ -287,10 +287,17 @@ namespace DotFastLZ.Compression
             /* magic identifier for compression level */
             int level = (input[inputOffset] >> 5) + 1;
 
-            if (level == 1) return DecompressLevel1(input, inputOffset, length, output, outputOffset, maxout);
-            if (level == 2) return DecompressLevel2(input, inputOffset, length, output, outputOffset, maxout);
+            if (level == 1)
+            {
+                return DecompressLevel1(input, inputOffset, length, output, outputOffset, maxout);
+            }
 
-            return 0;
+            if (level == 2)
+            {
+                return DecompressLevel2(input, inputOffset, length, output, outputOffset, maxout);
+            }
+
+            throw new Exception($"invalid level: {level} (expected: 1 or 2)");
         }
 
         // fastlz1_decompress
@@ -639,7 +646,7 @@ namespace DotFastLZ.Compression
                 dest[destOffset + i] = src[srcOffset + i];
             }
         }
-        
+
         public static long EstimateCompressedSize(long size)
         {
             long estimatedSize = (long)Math.Ceiling(size * 1.06f);
