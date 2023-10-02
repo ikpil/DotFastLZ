@@ -53,7 +53,7 @@ for (int level = 1; level <= 2; ++level)
 
 ## Usage: 6pack
 ```shell
-6pack.exe --help
+$ 6pack --help
 
 6pack: high-speed file compression tool
 Copyright (C) Ariya Hidayat, Choi Ikpil(ikpil@naver.com)
