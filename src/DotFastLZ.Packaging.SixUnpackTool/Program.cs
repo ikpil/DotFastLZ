@@ -25,9 +25,9 @@
 using System;
 using System.Collections.Generic;
 using DotFastLZ.Compression;
-using DotFastLZ.Package;
+using DotFastLZ.Packaging;
 
-namespace DotFastLZ.SixUnpack;
+namespace DotFastLZ.Packaging.SixUnpackTool;
 
 public static class Program
 {

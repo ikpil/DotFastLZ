@@ -7,15 +7,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{642F4CE7-043
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotFastLZ.Compression", "src\DotFastLZ.Compression\DotFastLZ.Compression.csproj", "{C20491BC-E472-4F09-B29C-DD7BF853C1C4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotFastLZ.Packaging", "src\DotFastLZ.Packaging\DotFastLZ.Packaging.csproj", "{95E2DEFC-180E-4EAC-84CD-583DE1AAD587}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotFastLZ.Packaging.SixPackTool", "src\DotFastLZ.Packaging.SixPackTool\DotFastLZ.Packaging.SixPackTool.csproj", "{A843203D-30DB-4CA4-9F6D-F03E9F1038C1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotFastLZ.Packaging.SixUnpackTool", "src\DotFastLZ.Packaging.SixUnpackTool\DotFastLZ.Packaging.SixUnpackTool.csproj", "{E949C124-C82E-4348-B604-A2D52D9F111C}"
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{87EE9A81-1074-4466-AF83-6A059185A8E9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotFastLZ.Compression.Tests", "test\DotFastLZ.Compression.Tests\DotFastLZ.Compression.Tests.csproj", "{FD482722-B4F3-4D05-8AAA-8EA228888C05}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotFastLZ.SixUnpackTool", "src\DotFastLZ.SixUnpackTool\DotFastLZ.SixUnpackTool.csproj", "{E949C124-C82E-4348-B604-A2D52D9F111C}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotFastLZ.SixPackTool", "src\DotFastLZ.SixPackTool\DotFastLZ.SixPackTool.csproj", "{A843203D-30DB-4CA4-9F6D-F03E9F1038C1}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotFastLZ.Package", "src\DotFastLZ.Package\DotFastLZ.Package.csproj", "{95E2DEFC-180E-4EAC-84CD-583DE1AAD587}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
