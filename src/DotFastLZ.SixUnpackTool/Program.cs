@@ -69,7 +69,7 @@ public static class Program
         for (int i = 0; i < archiveFiles.Count; ++i)
         {
             var archiveFile = archiveFiles[i];
-            SixPack.unpack_file(archiveFile);
+            SixPack.UnpackFile(archiveFile);
         }
 
         return 0;

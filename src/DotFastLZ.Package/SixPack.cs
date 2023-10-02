@@ -21,7 +21,8 @@ namespace DotFastLZ.Package
         /* for Adler-32 checksum algorithm, see RFC 1950 Section 8.2 */
         public const int ADLER32_BASE = 65521;
 
-        private static ulong update_adler32(ulong checksum, byte[] buf, long len)
+        // update_adler32
+        public static ulong Adler32(ulong checksum, byte[] buf, long len)
         {
             int ptr = 0;
             ulong s1 = checksum & 0xffff;
@@ -69,7 +70,8 @@ namespace DotFastLZ.Package
 
         /* return non-zero if magic sequence is detected */
         /* warning: reset the read pointer to the beginning of the file */
-        public static bool detect_magic(FileStream f)
+        // detect_magic
+        public static bool DetectMagic(FileStream f)
         {
             byte[] buffer = new byte[8];
 
@@ -93,14 +95,14 @@ namespace DotFastLZ.Package
             return true;
         }
 
-
-        public static void write_magic(FileStream f)
+        // write_magic
+        private static void WriteMagic(FileStream f)
         {
             f.Write(sixpack_magic);
         }
 
-
-        public static void write_chunk_header(FileStream f, int id, int options, long size, ulong checksum, long extra)
+        // write_chunk_header
+        private static void WriteChunkHeader(FileStream f, int id, int options, long size, ulong checksum, long extra)
         {
             byte[] buffer = new byte[16];
 
@@ -124,7 +126,8 @@ namespace DotFastLZ.Package
             f.Write(buffer);
         }
 
-        public static void read_chunk_header(FileStream f, out int id, out int options, out long size, out ulong checksum, out long extra)
+        // read_chunk_header
+        private static void ReadChunkHeader(FileStream f, out int id, out int options, out long size, out ulong checksum, out long extra)
         {
             byte[] buffer = new byte[16];
             f.Read(buffer, 0, 16);
@@ -136,20 +139,9 @@ namespace DotFastLZ.Package
             extra = FastLZ.ReadUInt32(buffer, 12) & 0xffffffff;
         }
 
-        public static string GetFileName(string path)
-        {
-            if (string.IsNullOrEmpty(path))
-            {
-                return string.Empty;
-            }
 
-            /* truncate directory prefix, e.g. "foo/bar/FILE.txt" becomes "FILE.txt" */
-            return path
-                .Split(new char[] { '/', '\\', Path.DirectorySeparatorChar, }, StringSplitOptions.RemoveEmptyEntries)
-                .Last();
-        }
-
-        public static int pack_file_compressed(string input_file, int method, int level, FileStream f)
+        // pack_file_compressed
+        private static int PackFileCompressed(string input_file, int method, int level, FileStream f)
         {
             ulong checksum;
             byte[] result = new byte[BLOCK_SIZE * 2]; /* FIXME twice is too large */
@@ -170,7 +162,7 @@ namespace DotFastLZ.Package
             ifs.Seek(0, SeekOrigin.Begin);
 
             /* already a 6pack archive? */
-            if (detect_magic(ifs))
+            if (DetectMagic(ifs))
             {
                 Console.WriteLine($"Error: file {input_file} is already a 6pack archive!");
                 return -1;
@@ -197,9 +189,9 @@ namespace DotFastLZ.Package
             buffer[9] = (byte)(shown_name.Length >> 8); // filename length for highest bit
 
             checksum = 1L;
-            checksum = update_adler32(checksum, buffer, 10);
-            checksum = update_adler32(checksum, shown_name, shown_name.Length);
-            write_chunk_header(f, 1, 0, 10 + shown_name.Length, checksum, 0);
+            checksum = Adler32(checksum, buffer, 10);
+            checksum = Adler32(checksum, shown_name, shown_name.Length);
+            WriteChunkHeader(f, 1, 0, 10 + shown_name.Length, checksum, 0);
             f.Write(buffer, 0, 10);
             f.Write(shown_name, 0, shown_name.Length);
             long total_compressed = 16 + 10 + shown_name.Length;
@@ -267,8 +259,8 @@ namespace DotFastLZ.Package
                     case 1:
                     {
                         long chunkSize = FastLZ.CompressLevel(level, buffer, bytes_read, result);
-                        checksum = update_adler32(1L, result, chunkSize);
-                        write_chunk_header(f, 17, 1, chunkSize, checksum, bytes_read);
+                        checksum = Adler32(1L, result, chunkSize);
+                        WriteChunkHeader(f, 17, 1, chunkSize, checksum, bytes_read);
                         f.Write(result, 0, (int)chunkSize);
                         total_compressed += 16;
                         total_compressed += chunkSize;
@@ -280,8 +272,8 @@ namespace DotFastLZ.Package
                     default:
                     {
                         checksum = 1L;
-                        checksum = update_adler32(checksum, buffer, bytes_read);
-                        write_chunk_header(f, 17, 0, bytes_read, checksum, bytes_read);
+                        checksum = Adler32(checksum, buffer, bytes_read);
+                        WriteChunkHeader(f, 17, 0, bytes_read, checksum, bytes_read);
                         f.Write(buffer, 0, bytes_read);
                         total_compressed += 16;
                         total_compressed += bytes_read;
@@ -324,21 +316,9 @@ namespace DotFastLZ.Package
             return 0;
         }
 
-        public static FileStream OpenFile(string filePath, FileMode mode, FileAccess access = FileAccess.Read, FileShare share = FileShare.Read)
-        {
-            try
-            {
-                return new FileStream(filePath, mode, access, share);
-            }
-            catch (Exception /* e */)
-            {
-                //Console.WriteLine(e.Message);
-                return null;
-            }
-        }
 
-
-        public static int pack_file(int compress_level, string input_file, string output_file)
+        // pack_file
+        public static int PackFile(int compress_level, string input_file, string output_file)
         {
             int result;
 
@@ -359,12 +339,13 @@ namespace DotFastLZ.Package
 
             using var ofs = fs;
 
-            write_magic(ofs);
-            result = pack_file_compressed(input_file, 1, compress_level, ofs);
+            WriteMagic(ofs);
+            result = PackFileCompressed(input_file, 1, compress_level, ofs);
             return result;
         }
 
-        public static int unpack_file(string input_file)
+        // unpack_file
+        public static int UnpackFile(string input_file)
         {
             ulong checksum;
 
@@ -384,7 +365,7 @@ namespace DotFastLZ.Package
             ifs.Seek(0, SeekOrigin.Begin);
 
             /* not a 6pack archive? */
-            if (!detect_magic(ifs))
+            if (!DetectMagic(ifs))
             {
                 Console.WriteLine($"Error: file {input_file} is not a 6pack archive!");
                 return -1;
@@ -401,7 +382,7 @@ namespace DotFastLZ.Package
             long total_extracted = 0;
             long decompressed_size = 0;
             long percent = 0;
-            
+
             byte[] buffer = new byte[BLOCK_SIZE];
             byte[] compressed_buffer = null;
             byte[] decompressed_buffer = null;
@@ -418,7 +399,7 @@ namespace DotFastLZ.Package
                     break;
                 }
 
-                read_chunk_header(
+                ReadChunkHeader(
                     ifs,
                     out var chunk_id,
                     out var chunk_options,
@@ -439,7 +420,7 @@ namespace DotFastLZ.Package
 
                     /* file entry */
                     ifs.Read(buffer, 0, (int)chunk_size);
-                    checksum = update_adler32(1L, buffer, chunk_size);
+                    checksum = Adler32(1L, buffer, chunk_size);
                     if (checksum != chunk_checksum)
                     {
                         Console.WriteLine("\nError: checksum mismatch!");
@@ -447,7 +428,7 @@ namespace DotFastLZ.Package
                         return -1;
                     }
 
-                    
+
                     decompressed_size = FastLZ.ReadUInt32(buffer, 0);
                     total_extracted = 0;
                     percent = 0;
@@ -524,7 +505,7 @@ namespace DotFastLZ.Package
                                 }
 
                                 f.Write(buffer, 0, (int)bytes_read);
-                                checksum = update_adler32(checksum, buffer, bytes_read);
+                                checksum = Adler32(checksum, buffer, bytes_read);
                                 remaining -= bytes_read;
                             }
 
@@ -555,7 +536,7 @@ namespace DotFastLZ.Package
 
                             /* read and check checksum */
                             ifs.Read(compressed_buffer, 0, (int)chunk_size);
-                            checksum = update_adler32(1L, compressed_buffer, chunk_size);
+                            checksum = Adler32(1L, compressed_buffer, chunk_size);
                             total_extracted += chunk_extra;
 
                             /* verify that the chunk data is correct */
@@ -614,11 +595,6 @@ namespace DotFastLZ.Package
             Console.WriteLine("");
             Console.WriteLine("");
 
-            /* free allocated stuff */
-            // free(compressed_buffer);
-            // free(decompressed_buffer);
-            // free(output_file);
-
             /* close working files */
             if (null != f)
             {
@@ -629,7 +605,8 @@ namespace DotFastLZ.Package
             return 0;
         }
 
-        public static int benchmark_speed(int compress_level, string input_file)
+        // benchmark_speed
+        public static int BenchmarkSpeed(int compress_level, string input_file)
         {
             /* sanity check */
             var fs = OpenFile(input_file, FileMode.Open);
@@ -647,7 +624,7 @@ namespace DotFastLZ.Package
             ifs.Seek(0, SeekOrigin.Begin);
 
             /* already a 6pack archive? */
-            if (detect_magic(ifs))
+            if (DetectMagic(ifs))
             {
                 Console.WriteLine("Error: no benchmark for 6pack archive!");
                 return -1;
@@ -741,6 +718,32 @@ namespace DotFastLZ.Package
             }
 
             return 0;
+        }
+
+        public static string GetFileName(string path)
+        {
+            if (string.IsNullOrEmpty(path))
+            {
+                return string.Empty;
+            }
+
+            /* truncate directory prefix, e.g. "foo/bar/FILE.txt" becomes "FILE.txt" */
+            return path
+                .Split(new char[] { '/', '\\', Path.DirectorySeparatorChar, }, StringSplitOptions.RemoveEmptyEntries)
+                .Last();
+        }
+
+        public static FileStream OpenFile(string filePath, FileMode mode, FileAccess access = FileAccess.Read, FileShare share = FileShare.Read)
+        {
+            try
+            {
+                return new FileStream(filePath, mode, access, share);
+            }
+            catch (Exception /* e */)
+            {
+                //Console.WriteLine(e.Message);
+                return null;
+            }
         }
     }
 }
