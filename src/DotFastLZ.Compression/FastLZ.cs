@@ -620,7 +620,7 @@ namespace DotFastLZ.Compression
         {
             long start = pOffset;
 
-            if (ReadUInt32(p, pOffset) == ReadUInt32(q, qOffset))
+            if (4 <= r && ReadUInt32(p, pOffset) == ReadUInt32(q, qOffset))
             {
                 pOffset += 4;
                 qOffset += 4;
