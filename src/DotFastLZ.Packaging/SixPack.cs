@@ -380,7 +380,7 @@ namespace DotFastLZ.Packaging
 
             /* initialize */
             string output_file = string.Empty;
-            FileStream f = null;
+            FileStream ofs = null;
             long total_extracted = 0;
             long decompressed_size = 0;
             long percent = 0;
@@ -414,10 +414,10 @@ namespace DotFastLZ.Packaging
                 {
                     /* close current file, if any */
                     Console.WriteLine("");
-                    if (null != f)
+                    if (null != ofs)
                     {
-                        f.Close();
-                        f = null;
+                        ofs.Close();
+                        ofs = null;
                     }
 
                     /* file entry */
@@ -441,18 +441,18 @@ namespace DotFastLZ.Packaging
                     output_file = output_file.Trim();
 
                     /* check if already exists */
-                    f = OpenFile(output_file, FileMode.Open);
-                    if (null != f)
+                    ofs = OpenFile(output_file, FileMode.Open);
+                    if (null != ofs)
                     {
-                        f.Close();
-                        f = null;
+                        ofs.Close();
+                        ofs = null;
                         Console.WriteLine($"File {output_file} already exists. Skipped.");
                     }
                     else
                     {
                         /* create the file */
-                        f = OpenFile(output_file, FileMode.CreateNew, FileAccess.Write, FileShare.Write);
-                        if (null == f)
+                        ofs = OpenFile(output_file, FileMode.CreateNew, FileAccess.Write, FileShare.Write);
+                        if (null == ofs)
                         {
                             Console.WriteLine($"Can't create file {output_file} Skipped.");
                         }
@@ -484,7 +484,7 @@ namespace DotFastLZ.Packaging
                     }
                 }
 
-                if ((chunk_id == 17) && null != f && !string.IsNullOrEmpty(output_file) && 0 < decompressed_size)
+                if ((chunk_id == 17) && null != ofs && !string.IsNullOrEmpty(output_file) && 0 < decompressed_size)
                 {
                     long remaining;
 
@@ -506,7 +506,7 @@ namespace DotFastLZ.Packaging
                                     break;
                                 }
 
-                                f.Write(buffer, 0, (int)bytes_read);
+                                ofs.Write(buffer, 0, (int)bytes_read);
                                 checksum = Adler32(checksum, buffer, bytes_read);
                                 remaining -= bytes_read;
                             }
@@ -557,7 +557,7 @@ namespace DotFastLZ.Packaging
                                 }
                                 else
                                 {
-                                    f.Write(decompressed_buffer, 0, (int)chunk_extra);
+                                    ofs.Write(decompressed_buffer, 0, (int)chunk_extra);
                                 }
                             }
 
@@ -598,9 +598,9 @@ namespace DotFastLZ.Packaging
             Console.WriteLine("");
 
             /* close working files */
-            if (null != f)
+            if (null != ofs)
             {
-                f.Close();
+                ofs.Close();
             }
 
             /* so far so good */
