@@ -12,7 +12,9 @@ namespace DotFastLZ.Packaging
         public const int SIXPACK_VERSION_MAJOR = 0;
         public const int SIXPACK_VERSION_MINOR = 1;
         public const int SIXPACK_VERSION_REVISION = 0;
+
         public const string SIXPACK_VERSION_STRING = "0.1.0";
+
         //public const string SIXPACK_VERSION_STRING = "snapshot 20070615";
         public const string FASTLZ_EXTENSION = ".fastlz";
 
@@ -252,7 +254,10 @@ namespace DotFastLZ.Packaging
                 }
 
                 /* too small, don't bother to compress */
-                if (bytes_read < 32) compress_method = 0;
+                if (bytes_read < 32)
+                {
+                    compress_method = 0;
+                }
 
                 /* write to output */
                 switch (compress_method)
@@ -493,6 +498,7 @@ namespace DotFastLZ.Packaging
                     {
                         /* stored, simply copy to output */
                         case 0:
+                        {
                             /* read one block at at time, write and update checksum */
                             total_extracted += chunk_size;
                             remaining = chunk_size;
@@ -517,11 +523,12 @@ namespace DotFastLZ.Packaging
                                 Console.WriteLine("\nError: checksum mismatch. Aborted.");
                                 Console.WriteLine($"Got {checksum:X8} Expecting {chunk_checksum:X8}");
                             }
-
+                        }
                             break;
 
                         /* compressed using FastLZ */
                         case 1:
+                        {
                             /* enlarge input buffer if necessary */
                             if (chunk_size > compressed_bufsize)
                             {
@@ -560,7 +567,7 @@ namespace DotFastLZ.Packaging
                                     ofs.Write(decompressed_buffer, 0, (int)chunk_extra);
                                 }
                             }
-
+                        }
                             break;
 
                         default:

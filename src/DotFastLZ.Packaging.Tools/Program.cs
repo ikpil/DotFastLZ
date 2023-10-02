@@ -27,7 +27,7 @@ using System.IO;
 using DotFastLZ.Compression;
 using DotFastLZ.Packaging;
 
-namespace DotFastLZ.Packaging.Tools.Cli;
+namespace DotFastLZ.Packaging.Tools;
 
 public static class Program
 {
