@@ -117,13 +117,13 @@ namespace DotFastLZ.Compression
                 // Find potential match
                 do
                 {
-                    seq = ReadUint32(input, ip) & 0xffffff;
+                    seq = ReadUInt32(input, ip) & 0xffffff;
                     hash = Hash(seq);
                     refIdx = ip_start + htab[hash];
                     htab[hash] = ip - ip_start;
                     distance = ip - refIdx;
                     cmp = distance < MAX_L1_DISTANCE
-                        ? ReadUint32(input, refIdx) & 0xffffff
+                        ? ReadUInt32(input, refIdx) & 0xffffff
                         : 0x1000000;
 
                     if (ip >= ip_limit)
@@ -151,7 +151,7 @@ namespace DotFastLZ.Compression
 
                 // Update the hash at the match boundary
                 ip += len;
-                seq = ReadUint32(input, ip);
+                seq = ReadUInt32(input, ip);
                 hash = Hash(seq & 0xffffff);
                 htab[hash] = ip++ - ip_start;
                 seq >>= 8;
@@ -198,13 +198,13 @@ namespace DotFastLZ.Compression
                 /* find potential match */
                 do
                 {
-                    seq = ReadUint32(input, ip) & 0xffffff;
+                    seq = ReadUInt32(input, ip) & 0xffffff;
                     hash = Hash(seq);
                     refs = ip_start + htab[hash];
                     htab[hash] = ip - ip_start;
                     distance = ip - refs;
                     cmp = distance < MAX_FARDISTANCE
-                        ? ReadUint32(input, refs) & 0xffffff
+                        ? ReadUInt32(input, refs) & 0xffffff
                         : 0x1000000;
 
                     if (ip >= ip_limit)
@@ -242,7 +242,7 @@ namespace DotFastLZ.Compression
 
                 /* update the hash at match boundary */
                 ip += len;
-                seq = ReadUint32(input, ip);
+                seq = ReadUInt32(input, ip);
                 hash = Hash(seq & 0xffffff);
                 htab[hash] = ip++ - ip_start;
                 seq >>= 8;
@@ -469,12 +469,19 @@ namespace DotFastLZ.Compression
         }
 
         // flz_readu32
-        public static uint ReadUint32(byte[] data, long offset)
+        public static uint ReadUInt32(byte[] data, long offset)
         {
             return ((uint)data[offset + 3] & 0xff) << 24 |
                    ((uint)data[offset + 2] & 0xff) << 16 |
                    ((uint)data[offset + 1] & 0xff) << 8 |
                    ((uint)data[offset + 0] & 0xff);
+        }
+
+        public static ushort ReadUInt16(byte[] data, long offset)
+        {
+            var u16 = ((uint)data[offset + 1] << 8) |
+                      ((uint)data[offset + 0]);
+            return (ushort)u16;
         }
 
         // flz_hash
@@ -613,7 +620,7 @@ namespace DotFastLZ.Compression
         {
             long start = pOffset;
 
-            if (ReadUint32(p, pOffset) == ReadUint32(q, qOffset))
+            if (ReadUInt32(p, pOffset) == ReadUInt32(q, qOffset))
             {
                 pOffset += 4;
                 qOffset += 4;
