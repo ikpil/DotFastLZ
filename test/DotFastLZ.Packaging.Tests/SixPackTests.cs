@@ -98,12 +98,12 @@ public class SixPackTests
     {
         const string benchmarkFileName = "benchmark.txt";
         File.Delete(benchmarkFileName);
-        
+
         GenerateFile(benchmarkFileName, 1024 * 1024 * 8);
 
         int status1 = SixPack.BenchmarkSpeed(1, benchmarkFileName);
         int status2 = SixPack.BenchmarkSpeed(2, benchmarkFileName);
-        
+
         Assert.That(status1, Is.EqualTo(0));
         Assert.That(status2, Is.EqualTo(0));
     }
@@ -126,17 +126,16 @@ public class SixPackTests
     {
         const string filename = "open-file-test.txt";
         File.Delete(filename);
-        
+
         Assert.That(SixPack.OpenFile(filename, FileMode.Open), Is.Null);
         Assert.That(SixPack.OpenFile(filename, FileMode.Create, FileAccess.Write), Is.Not.Null);
     }
 
     public long GenerateFile(string filename, long size)
     {
-        var text = @"About Adler32 Checksum Calculator
-                     The Adler32 Checksum Calculator will compute an Adler32 checksum of string. 
-                     Adler32 is a checksum algorithm that was invented by Mark Adler. 
-                     In contrast to a cyclic redundancy check (CRC) of the same length, it trades reliability for speed.";
+        var text = "About Adler32 Checksum Calculator The Adler32 Checksum Calculator will compute an Adler32 checksum of string. " +
+                   "Adler32 is a checksum algorithm that was invented by Mark Adler. " +
+                   "In contrast to a cyclic redundancy check (CRC) of the same length, it trades reliability for speed.";
 
         var bytes = Encoding.UTF8.GetBytes(text);
 
