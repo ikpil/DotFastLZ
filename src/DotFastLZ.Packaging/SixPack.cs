@@ -19,7 +19,7 @@ namespace DotFastLZ.Packaging
         public const string FASTLZ_EXTENSION = ".fastlz";
 
         /* magic identifier for 6pack file */
-        private static readonly byte[] sixpack_magic = { 137, (byte)'6', (byte)'P', (byte)'K', 13, 10, 26, 10 };
+        public static readonly ReadOnlyMemory<byte> SIXPACK_MAGIC = new ReadOnlyMemory<byte>(new byte[] { 137, (byte)'6', (byte)'P', (byte)'K', 13, 10, 26, 10 });
         public const int BLOCK_SIZE = (2 * 64 * 1024);
 
         /* for Adler-32 checksum algorithm, see RFC 1950 Section 8.2 */
@@ -75,7 +75,7 @@ namespace DotFastLZ.Packaging
         /* return non-zero if magic sequence is detected */
         /* warning: reset the read pointer to the beginning of the file */
         // detect_magic
-        public static bool DetectMagic(FileStream f)
+        public static bool DetectMagicByFileStream(FileStream f)
         {
             byte[] buffer = new byte[8];
 
@@ -83,14 +83,19 @@ namespace DotFastLZ.Packaging
             var bytesRead = f.Read(buffer, 0, 8);
             f.Seek(0, SeekOrigin.Begin);
 
-            if (bytesRead < 8)
+            return DetectMagic(buffer, 0);
+        }
+
+        public static bool DetectMagic(byte[] buffer, int offset)
+        {
+            if (buffer.Length - offset < 8)
             {
                 return false;
             }
 
             for (int c = 0; c < 8; c++)
             {
-                if (buffer[c] != sixpack_magic[c])
+                if (buffer[offset + c] != SIXPACK_MAGIC.Span[c])
                 {
                     return false;
                 }
@@ -102,7 +107,7 @@ namespace DotFastLZ.Packaging
         // write_magic
         private static void WriteMagic(FileStream f)
         {
-            f.Write(sixpack_magic);
+            f.Write(SIXPACK_MAGIC.Span);
         }
 
         // write_chunk_header
@@ -166,7 +171,7 @@ namespace DotFastLZ.Packaging
             ifs.Seek(0, SeekOrigin.Begin);
 
             /* already a 6pack archive? */
-            if (DetectMagic(ifs))
+            if (DetectMagicByFileStream(ifs))
             {
                 Console.WriteLine($"Error: file {input_file} is already a 6pack archive!");
                 return -1;
@@ -372,7 +377,7 @@ namespace DotFastLZ.Packaging
             ifs.Seek(0, SeekOrigin.Begin);
 
             /* not a 6pack archive? */
-            if (!DetectMagic(ifs))
+            if (!DetectMagicByFileStream(ifs))
             {
                 Console.WriteLine($"Error: file {input_file} is not a 6pack archive!");
                 return -1;
@@ -633,7 +638,7 @@ namespace DotFastLZ.Packaging
             ifs.Seek(0, SeekOrigin.Begin);
 
             /* already a 6pack archive? */
-            if (DetectMagic(ifs))
+            if (DetectMagicByFileStream(ifs))
             {
                 Console.WriteLine("Error: no benchmark for 6pack archive!");
                 return -1;
