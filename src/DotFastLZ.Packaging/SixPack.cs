@@ -88,7 +88,7 @@ namespace DotFastLZ.Packaging
 
         public static bool DetectMagic(byte[] buffer, int offset)
         {
-            if (buffer.Length - offset < 8)
+            if (0 > offset || buffer.Length - offset < 8)
             {
                 return false;
             }
@@ -660,7 +660,7 @@ namespace DotFastLZ.Packaging
             // }
 
             Console.WriteLine("Reading source file....");
-            int bytes_read = ifs.Read(buffer, 0, 1);
+            int bytes_read = ifs.Read(buffer, 0, (int)fsize);
             if (bytes_read != fsize)
             {
                 Console.WriteLine($"Error reading file {shown_name}!");
