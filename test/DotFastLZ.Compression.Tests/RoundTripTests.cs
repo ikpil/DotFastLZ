@@ -31,7 +31,7 @@ namespace DotFastLZ.Compression.Tests;
 
 [TestFixture]
 [Parallelizable(ParallelScope.All)]
-public class CompressionTests
+public class RoundTripTests
 {
     private const string Prefix = "compression-corpus";
 
