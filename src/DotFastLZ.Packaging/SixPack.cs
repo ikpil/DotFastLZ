@@ -14,6 +14,7 @@ namespace DotFastLZ.Packaging
         public const int SIXPACK_VERSION_REVISION = 0;
         public const string SIXPACK_VERSION_STRING = "0.1.0";
         //public const string SIXPACK_VERSION_STRING = "snapshot 20070615";
+        public const string FASTLZ_EXTENSION = ".fastlz";
 
         /* magic identifier for 6pack file */
         private static readonly byte[] sixpack_magic = { 137, (byte)'6', (byte)'P', (byte)'K', 13, 10, 26, 10 };
@@ -307,7 +308,7 @@ namespace DotFastLZ.Packaging
 
                     var elapsedTicks = (DateTime.UtcNow.Ticks - beginTick);
                     var elapsedMs = elapsedTicks / TimeSpan.TicksPerMillisecond;
-                    var elapsedMicro = elapsedTicks / (TimeSpan.TicksPerMillisecond * 1000);
+                    var elapsedMicro = elapsedTicks / (TimeSpan.TicksPerMillisecond / 1000);
                     Console.Write($"{(int)percent / 10:D2}.{(int)percent % 10:D1}% saved - {elapsedMs} ms, {elapsedMicro} micro");
                 }
 

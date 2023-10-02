@@ -3,7 +3,8 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net7.0</TargetFramework>
-    <AssemblyName>6unpack</AssemblyName>
+    <AssemblyName>6pack</AssemblyName>
+    <RootNamespace>DotFastLZ.Packaging.Tools.Cli</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
