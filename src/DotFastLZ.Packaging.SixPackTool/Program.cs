@@ -24,9 +24,9 @@
 
 using System;
 using DotFastLZ.Compression;
-using DotFastLZ.Package;
+using DotFastLZ.Packaging;
 
-namespace DotFastLZ.SixPackTool;
+namespace DotFastLZ.Packaging.SixPackTool;
 
 public static class Program
 {
