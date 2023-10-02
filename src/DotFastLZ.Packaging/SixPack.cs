@@ -605,6 +605,11 @@ namespace DotFastLZ.Packaging
                             Console.Write("#");
                             last_percent++;
                         }
+
+                        if (total_extracted == decompressed_size)
+                        {
+                            Console.WriteLine($"]");
+                        }
                     }
                 }
 
