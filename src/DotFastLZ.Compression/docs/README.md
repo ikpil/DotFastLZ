@@ -3,7 +3,7 @@
 // input source
 string text = "This is an example original text in English. ";
 
-// 최소 길이 2048자를 만족하도록 텍스트를 확장
+// extend the text to meet a minimum length of 2048 characters
 while (text.Length < 2048)
 {
     text += "Lorem ipsum dolor sit amet, consectetur adipiscing elit. \n";
@@ -15,29 +15,29 @@ for (int level = 1; level <= 2; ++level)
 {
     // compress
     var estimateSize = FastLZ.EstimateCompressedSize(input.Length);
-    var compressedBuffer = new byte[estimateSize];
-    var compressedSize = FastLZ.CompressLevel(level, input, input.Length, compressedBuffer);
+    var comBuf = new byte[estimateSize];
+    var comBufSize = FastLZ.CompressLevel(level, input, input.Length, comBuf);
 
     // decompress
-    byte[] decompressedBuffer = null;
-    var decompressedSize = 0L;
+    byte[] decBuf = null;
+    var decBufSize = 0L;
     do
     {
         // guess
-        long guessSize = null == decompressedBuffer 
-            ? compressedSize * 3 
-            : decompressedBuffer.Length * 3;
-        
-        decompressedBuffer = new byte[guessSize];
-        decompressedSize = FastLZ.Decompress(compressedBuffer, compressedSize, decompressedBuffer, decompressedBuffer.Length);
+        long guessSize = null == decBuf 
+            ? comBufSize * 3 
+            : decBuf.Length * 3;
+
+        decBuf = new byte[guessSize];
+        decBufSize = FastLZ.Decompress(comBuf, comBufSize, decBuf, decBuf.Length);
         // ..
-    } while (0 == decompressedSize && decompressedBuffer.Length < input.Length);
+    } while (0 == decBufSize && decBuf.Length < input.Length);
 
     // compare
-    var compareSize = FastLZ.MemCompare(input, 0, decompressedBuffer, 0, decompressedSize);
+    var compareSize = FastLZ.MemCompare(input, 0, decBuf, 0, decBufSize);
 
     // check
-    Assert.That(decompressedSize, Is.EqualTo(input.Length), "decompress size error");
+    Assert.That(decBufSize, Is.EqualTo(input.Length), "decompress size error");
     Assert.That(compareSize, Is.EqualTo(input.Length), "decompress compare error");
 }
 ```
