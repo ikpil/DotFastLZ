@@ -677,11 +677,12 @@ namespace DotFastLZ.Packaging
             /* shamelessly copied from QuickLZ 1.20 test program */
             {
 
-                Console.WriteLine("Setting HIGH_PRIORITY_CLASS...");
-                {
-                    Process currentProcess = Process.GetCurrentProcess();
-                    currentProcess.PriorityClass = ProcessPriorityClass.High;
-                }
+                // multi platform error
+                // Console.WriteLine("Setting HIGH_PRIORITY_CLASS...");
+                // {
+                //      Process currentProcess = Process.GetCurrentProcess();
+                //      currentProcess.PriorityClass = ProcessPriorityClass.High;
+                // }
 
                 Console.WriteLine($"Benchmarking FastLZ Level {compress_level}, please wait...");
 
