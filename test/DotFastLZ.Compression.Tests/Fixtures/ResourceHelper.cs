@@ -22,13 +22,53 @@
 
 
 using System;
+using System.Collections.Immutable;
 using System.IO;
 using System.IO.Compression;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace DotFastLZ.Compression.Tests.Fixtures;
 
 public static class ResourceHelper
 {
+    public const string Prefix = "compression-corpus";
+
+    // ready zip files
+    public static readonly ImmutableArray<SourceZip> SourceZipFiles = ImmutableArray.Create(
+        new SourceZip("canterburycorpus.zip", "canterbury"),
+        new SourceZip("silesia.zip", "silesia"),
+        new SourceZip("enwik8.zip", "enwik")
+    );
+
+    public static readonly ImmutableArray<string> TestFiles = ImmutableArray.Create(
+        "canterbury/alice29.txt",
+        "canterbury/asyoulik.txt",
+        "canterbury/cp.html",
+        "canterbury/fields.c",
+        "canterbury/grammar.lsp",
+        "canterbury/kennedy.xls",
+        "canterbury/lcet10.txt",
+        "canterbury/plrabn12.txt",
+        "canterbury/ptt5",
+        "canterbury/sum",
+        "canterbury/xargs.1",
+        "silesia/dickens",
+        "silesia/mozilla",
+        "silesia/mr",
+        "silesia/nci",
+        "silesia/ooffice",
+        "silesia/osdb",
+        "silesia/reymont",
+        "silesia/samba",
+        "silesia/sao",
+        "silesia/webster",
+        "silesia/x-ray",
+        "silesia/xml",
+        "enwik/enwik8"
+    );
+
+
     public static byte[] ToBytes(string filename)
     {
         var filepath = Find(filename);
@@ -102,5 +142,63 @@ public static class ResourceHelper
         }
 
         return -1;
+    }
+
+    public static long GenerateFile(string filename, long size)
+    {
+        var text = "About Adler32 Checksum Calculator The Adler32 Checksum Calculator will compute an Adler32 checksum of string. " +
+                   "Adler32 is a checksum algorithm that was invented by Mark Adler. " +
+                   "In contrast to a cyclic redundancy check (CRC) of the same length, it trades reliability for speed.";
+
+        var bytes = Encoding.UTF8.GetBytes(text);
+
+        using var fs = new FileStream(filename, FileMode.Create, FileAccess.Write, FileShare.Read);
+
+        var count = size / bytes.Length;
+        for (int i = 0; i < count; ++i)
+        {
+            fs.Write(bytes);
+        }
+
+        count = size % bytes.Length;
+        if (0 < count)
+        {
+            fs.Write(bytes, 0, (int)count);
+        }
+
+        return size;
+    }
+
+    public static string ComputeMD5(string filePath)
+    {
+        using var md5 = MD5.Create();
+        using var stream = File.OpenRead(filePath);
+        byte[] hashBytes = md5.ComputeHash(stream);
+        StringBuilder sb = new StringBuilder();
+
+        foreach (byte b in hashBytes)
+        {
+            sb.Append(b.ToString("x2"));
+        }
+
+        return sb.ToString();
+    }
+
+    public static void ExtractAll()
+    {
+        // extract source files
+        foreach (var sourceZip in SourceZipFiles)
+        {
+            sourceZip.Extract(Prefix);
+        }
+    }
+
+    public static void RemoveAll()
+    {
+        var path = Find(Prefix);
+        if (!string.IsNullOrEmpty(path))
+        {
+            Directory.Delete(path, true);
+        }
     }
 }
