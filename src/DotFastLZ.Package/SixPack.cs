@@ -330,8 +330,9 @@ namespace DotFastLZ.Package
             {
                 return new FileStream(filePath, mode, access, share);
             }
-            catch (Exception)
+            catch (Exception /* e */)
             {
+                //Console.WriteLine(e.Message);
                 return null;
             }
         }
@@ -392,7 +393,7 @@ namespace DotFastLZ.Package
             Console.Write($"Archive: {input_file}");
 
             /* position of first chunk */
-            ifs.Seek(8, SeekOrigin.Current);
+            ifs.Seek(8, SeekOrigin.Begin);
 
             /* initialize */
             string output_file = string.Empty;
@@ -453,7 +454,8 @@ namespace DotFastLZ.Package
 
                     /* get file to extract */
                     int name_length = FastLZ.ReadUInt16(buffer, 8);
-                    output_file = Encoding.UTF8.GetString(buffer, 10, name_length);
+                    output_file = Encoding.UTF8.GetString(buffer, 10, name_length - 1);
+                    output_file = output_file.Trim();
 
                     /* check if already exists */
                     f = OpenFile(output_file, FileMode.Open);
@@ -466,10 +468,10 @@ namespace DotFastLZ.Package
                     else
                     {
                         /* create the file */
-                        f = OpenFile(output_file, FileMode.Create, FileAccess.Write);
+                        f = OpenFile(output_file, FileMode.CreateNew, FileAccess.Write, FileShare.Write);
                         if (null == f)
                         {
-                            Console.WriteLine($"Can't create file {output_file}. Skipped.");
+                            Console.WriteLine($"Can't create file {output_file} Skipped.");
                         }
                         else
                         {
@@ -584,13 +586,18 @@ namespace DotFastLZ.Package
                     }
 
                     /* for progress, if everything is fine */
-                    if (null != f)
+                    //if (null != f)
                     {
                         int last_percent = (int)percent;
                         if (decompressed_size < (1 << 24))
+                        {
                             percent = total_extracted * 100 / decompressed_size;
+                        }
                         else
+                        {
                             percent = total_extracted / 256 * 100 / (decompressed_size >> 8);
+                        }
+
                         percent >>= 1;
                         while (last_percent < (int)percent)
                         {
@@ -601,7 +608,7 @@ namespace DotFastLZ.Package
                 }
 
                 /* position of next chunk */
-                ifs.Seek(pos + 16 + chunk_size, SeekOrigin.Current);
+                ifs.Seek(pos + 16 + chunk_size, SeekOrigin.Begin);
             }
 
             Console.WriteLine("");
