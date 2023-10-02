@@ -25,6 +25,12 @@ namespace DotFastLZ.Packaging
         /* for Adler-32 checksum algorithm, see RFC 1950 Section 8.2 */
         public const int ADLER32_BASE = 65521;
 
+
+        public static long GetTickCount64()
+        {
+            return unchecked((long)(Stopwatch.GetTimestamp() * ((double)TimeSpan.TicksPerSecond / Stopwatch.Frequency)));
+        }
+
         // update_adler32
         public static ulong Adler32(ulong checksum, byte[] buf, long len)
         {
@@ -230,7 +236,7 @@ namespace DotFastLZ.Packaging
             /* read file and place ifs archive */
             long total_read = 0;
             long percent = 0;
-            var beginTick = DateTime.UtcNow.Ticks;
+            var beginTick = GetTickCount64();
             for (;;)
             {
                 int compress_method = method;
@@ -316,7 +322,7 @@ namespace DotFastLZ.Packaging
 
                     percent = 1000 - percent;
 
-                    var elapsedTicks = (DateTime.UtcNow.Ticks - beginTick);
+                    var elapsedTicks = (GetTickCount64() - beginTick);
                     var elapsedMs = elapsedTicks / TimeSpan.TicksPerMillisecond;
                     var elapsedMicro = elapsedTicks / (TimeSpan.TicksPerMillisecond / 1000);
                     Console.Write($"{(int)percent / 10:D2}.{(int)percent % 10:D1}% saved - {elapsedMs} ms, {elapsedMicro} micro");
@@ -670,7 +676,6 @@ namespace DotFastLZ.Packaging
 
             /* shamelessly copied from QuickLZ 1.20 test program */
             {
-                long mbs, fastest;
 
                 Console.WriteLine("Setting HIGH_PRIORITY_CLASS...");
                 {
@@ -681,54 +686,58 @@ namespace DotFastLZ.Packaging
                 Console.WriteLine($"Benchmarking FastLZ Level {compress_level}, please wait...");
 
                 long u = 0;
-                int i = bytes_read;
-                fastest = 0;
+                long fastest = 0;
+                long curTicks;
                 for (int j = 0; j < 3; j++)
                 {
                     int y = 0;
-                    mbs = DateTime.UtcNow.Ticks;
-                    while (DateTime.UtcNow.Ticks == mbs)
+                    curTicks = GetTickCount64();
+                    while (GetTickCount64() == curTicks)
                     {
                     }
 
-                    mbs = DateTime.UtcNow.Ticks;
-                    while (DateTime.UtcNow.Ticks - mbs < 3000) /* 1% accuracy with 18.2 timer */
+                    curTicks = GetTickCount64();
+                    while (GetTickCount64() - curTicks < 3000) /* 1% accuracy with 18.2 timer */
                     {
                         u = FastLZ.CompressLevel(compress_level, buffer, bytes_read, result);
                         y++;
                     }
 
 
-                    mbs = (long)(((double)i * (double)y) / ((double)(DateTime.UtcNow.Ticks - mbs) / 1000.0d) / 1000000.0d);
-                    /*printf(" %.1f Mbyte/s  ", mbs);*/
-                    if (fastest < mbs) fastest = mbs;
+                    long mbs = (bytes_read * y) / ((GetTickCount64() - curTicks) / TimeSpan.TicksPerMillisecond);
+                    if (fastest < mbs)
+                    {
+                        fastest = mbs;
+                    }
                 }
 
-                Console.WriteLine($"Compressed {i} bytes into {u} bytes ({(u * 100.0 / i):F1}%) at {fastest:F1} Mbyte/s.");
+                Console.WriteLine($"Compressed {bytes_read} bytes into {u} bytes ({(u * 100.0d / bytes_read):F1}%) at {fastest / (double)1000:F1} Mbyte/s.");
 
                 fastest = 0;
                 long compressed_size = u;
                 for (int j = 0; j < 3; j++)
                 {
                     int y = 0;
-                    mbs = DateTime.UtcNow.Ticks;
-                    while (DateTime.UtcNow.Ticks == mbs)
+                    curTicks = GetTickCount64();
+                    while (GetTickCount64() == curTicks)
                     {
                     }
 
-                    mbs = DateTime.UtcNow.Ticks;
-                    while (DateTime.UtcNow.Ticks - mbs < 3000) /* 1% accuracy with 18.2 timer */
+                    curTicks = GetTickCount64();
+                    while (GetTickCount64() - curTicks < 3000) /* 1% accuracy with 18.2 timer */
                     {
                         u = FastLZ.Decompress(result, compressed_size, buffer, bytes_read);
                         y++;
                     }
 
-                    mbs = (long)(((double)i * (double)y) / ((double)(DateTime.UtcNow.Ticks - mbs) / 1000.0d) / 1000000.0d);
-                    /*printf(" %.1f Mbyte/s  ", mbs);*/
-                    if (fastest < mbs) fastest = mbs;
+                    long mbs = (bytes_read * y) / ((GetTickCount64() - curTicks) / TimeSpan.TicksPerMillisecond);
+                    if (fastest < mbs)
+                    {
+                        fastest = mbs;
+                    }
                 }
 
-                Console.WriteLine($"\nDecompressed at {fastest:F1} Mbyte/s.\n\n(1 MB = 1000000 byte)");
+                Console.WriteLine($"\nDecompressed at {fastest / (double)1000:F1} Mbyte/s.\n\n(1 MB = 1000000 byte)");
             }
 
             return 0;
