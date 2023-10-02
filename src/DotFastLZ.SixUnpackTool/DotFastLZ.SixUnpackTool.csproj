@@ -4,10 +4,11 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net7.0</TargetFramework>
     <AssemblyName>6unpack</AssemblyName>
+    <RootNamespace>DotFastLZ.SixUnpack</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DotFastLZ.Compression\DotFastLZ.Compression.csproj" />
+    <ProjectReference Include="..\DotFastLZ.Package\DotFastLZ.Package.csproj" />
   </ItemGroup>
 
 </Project>
