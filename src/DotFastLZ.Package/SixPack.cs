@@ -124,6 +124,18 @@ namespace DotFastLZ.Package
             f.Write(buffer);
         }
 
+        public static void read_chunk_header(FileStream f, out int id, out int options, out long size, out ulong checksum, out long extra)
+        {
+            byte[] buffer = new byte[16];
+            f.Read(buffer, 0, 16);
+
+            id = FastLZ.ReadUInt16(buffer, 0) & 0xffff;
+            options = FastLZ.ReadUInt16(buffer, 2) & 0xffff;
+            size = FastLZ.ReadUInt32(buffer, 4) & 0xffffffff;
+            checksum = FastLZ.ReadUInt32(buffer, 8) & 0xffffffff;
+            extra = FastLZ.ReadUInt32(buffer, 12) & 0xffffffff;
+        }
+
         public static string GetFileName(string path)
         {
             if (string.IsNullOrEmpty(path))
@@ -349,6 +361,265 @@ namespace DotFastLZ.Package
             write_magic(ofs);
             result = pack_file_compressed(input_file, 1, compress_level, ofs);
             return result;
+        }
+
+        public static int unpack_file(string input_file)
+        {
+            ulong checksum;
+
+            /* sanity check */
+            var tempFs = OpenFile(input_file, FileMode.Open);
+            if (null == tempFs)
+            {
+                Console.WriteLine($"Error: could not open {input_file}");
+                return -1;
+            }
+
+            using var ifs = tempFs;
+
+            /* find size of the file */
+            ifs.Seek(0, SeekOrigin.End);
+            long fsize = ifs.Position;
+            ifs.Seek(0, SeekOrigin.Begin);
+
+            /* not a 6pack archive? */
+            if (!detect_magic(ifs))
+            {
+                Console.WriteLine($"Error: file {input_file} is not a 6pack archive!");
+                return -1;
+            }
+
+            Console.Write($"Archive: {input_file}");
+
+            /* position of first chunk */
+            ifs.Seek(8, SeekOrigin.Current);
+
+            /* initialize */
+            string output_file = string.Empty;
+            FileStream f = null;
+            long total_extracted = 0;
+            long decompressed_size = 0;
+            long percent = 0;
+            
+            byte[] buffer = new byte[BLOCK_SIZE];
+            byte[] compressed_buffer = null;
+            byte[] decompressed_buffer = null;
+            long compressed_bufsize = 0;
+            long decompressed_bufsize = 0;
+
+            /* main loop */
+            for (;;)
+            {
+                /* end of file? */
+                long pos = ifs.Position;
+                if (pos >= fsize)
+                {
+                    break;
+                }
+
+                read_chunk_header(
+                    ifs,
+                    out var chunk_id,
+                    out var chunk_options,
+                    out var chunk_size,
+                    out var chunk_checksum,
+                    out var chunk_extra
+                );
+
+                if (chunk_id == 1 && chunk_size > 10 && chunk_size < BLOCK_SIZE)
+                {
+                    /* close current file, if any */
+                    Console.WriteLine("");
+                    if (null != f)
+                    {
+                        f.Close();
+                        f = null;
+                    }
+
+                    /* file entry */
+                    ifs.Read(buffer, 0, (int)chunk_size);
+                    checksum = update_adler32(1L, buffer, chunk_size);
+                    if (checksum != chunk_checksum)
+                    {
+                        Console.WriteLine("\nError: checksum mismatch!");
+                        Console.WriteLine($"Got {checksum:X8} Expecting {chunk_checksum:X8}");
+                        return -1;
+                    }
+
+                    
+                    decompressed_size = FastLZ.ReadUInt32(buffer, 0);
+                    total_extracted = 0;
+                    percent = 0;
+
+                    /* get file to extract */
+                    int name_length = FastLZ.ReadUInt16(buffer, 8);
+                    output_file = Encoding.UTF8.GetString(buffer, 10, name_length);
+
+                    /* check if already exists */
+                    f = OpenFile(output_file, FileMode.Open);
+                    if (null != f)
+                    {
+                        f.Close();
+                        f = null;
+                        Console.WriteLine($"File {output_file} already exists. Skipped.");
+                    }
+                    else
+                    {
+                        /* create the file */
+                        f = OpenFile(output_file, FileMode.Create, FileAccess.Write);
+                        if (null == f)
+                        {
+                            Console.WriteLine($"Can't create file {output_file}. Skipped.");
+                        }
+                        else
+                        {
+                            /* for progress status */
+                            Console.WriteLine("");
+                            string progress;
+                            if (16 < output_file.Length)
+                            {
+                                progress = output_file.Substring(0, 13);
+                                progress += ".. ";
+                            }
+                            else
+                            {
+                                progress = output_file.PadRight(16, ' ');
+                            }
+
+
+                            Console.Write($"{progress} [");
+                            for (int c = 0; c < 50; c++)
+                            {
+                                Console.Write(".");
+                            }
+
+                            Console.Write("]\r");
+                            Console.Write($"{progress} [");
+                        }
+                    }
+                }
+
+                if ((chunk_id == 17) && null != f && !string.IsNullOrEmpty(output_file) && 0 < decompressed_size)
+                {
+                    long remaining;
+
+                    /* uncompressed */
+                    switch (chunk_options)
+                    {
+                        /* stored, simply copy to output */
+                        case 0:
+                            /* read one block at at time, write and update checksum */
+                            total_extracted += chunk_size;
+                            remaining = chunk_size;
+                            checksum = 1L;
+                            for (;;)
+                            {
+                                long r = (BLOCK_SIZE < remaining) ? BLOCK_SIZE : remaining;
+                                long bytes_read = ifs.Read(buffer, 0, (int)r);
+                                if (0 >= bytes_read)
+                                {
+                                    break;
+                                }
+
+                                f.Write(buffer, 0, (int)bytes_read);
+                                checksum = update_adler32(checksum, buffer, bytes_read);
+                                remaining -= bytes_read;
+                            }
+
+                            /* verify everything is written correctly */
+                            if (checksum != chunk_checksum)
+                            {
+                                Console.WriteLine("\nError: checksum mismatch. Aborted.");
+                                Console.WriteLine($"Got {checksum:X8} Expecting {chunk_checksum:X8}");
+                            }
+
+                            break;
+
+                        /* compressed using FastLZ */
+                        case 1:
+                            /* enlarge input buffer if necessary */
+                            if (chunk_size > compressed_bufsize)
+                            {
+                                compressed_bufsize = chunk_size;
+                                compressed_buffer = new byte[compressed_bufsize];
+                            }
+
+                            /* enlarge output buffer if necessary */
+                            if (chunk_extra > decompressed_bufsize)
+                            {
+                                decompressed_bufsize = chunk_extra;
+                                decompressed_buffer = new byte[decompressed_bufsize];
+                            }
+
+                            /* read and check checksum */
+                            ifs.Read(compressed_buffer, 0, (int)chunk_size);
+                            checksum = update_adler32(1L, compressed_buffer, chunk_size);
+                            total_extracted += chunk_extra;
+
+                            /* verify that the chunk data is correct */
+                            if (checksum != chunk_checksum)
+                            {
+                                Console.WriteLine("\nError: checksum mismatch. Skipped.");
+                                Console.WriteLine($"Got {checksum:X8} Expecting {chunk_checksum:X8}");
+                            }
+                            else
+                            {
+                                /* decompress and verify */
+                                remaining = FastLZ.Decompress(compressed_buffer, chunk_size, decompressed_buffer, chunk_extra);
+                                if (remaining != chunk_extra)
+                                {
+                                    Console.WriteLine("\nError: decompression failed. Skipped.");
+                                }
+                                else
+                                {
+                                    f.Write(decompressed_buffer, 0, (int)chunk_extra);
+                                }
+                            }
+
+                            break;
+
+                        default:
+                            Console.WriteLine($"\nError: unknown compression method ({chunk_options})");
+                            break;
+                    }
+
+                    /* for progress, if everything is fine */
+                    if (null != f)
+                    {
+                        int last_percent = (int)percent;
+                        if (decompressed_size < (1 << 24))
+                            percent = total_extracted * 100 / decompressed_size;
+                        else
+                            percent = total_extracted / 256 * 100 / (decompressed_size >> 8);
+                        percent >>= 1;
+                        while (last_percent < (int)percent)
+                        {
+                            Console.Write("#");
+                            last_percent++;
+                        }
+                    }
+                }
+
+                /* position of next chunk */
+                ifs.Seek(pos + 16 + chunk_size, SeekOrigin.Current);
+            }
+
+            Console.WriteLine("");
+            Console.WriteLine("");
+
+            /* free allocated stuff */
+            // free(compressed_buffer);
+            // free(decompressed_buffer);
+            // free(output_file);
+
+            /* close working files */
+            if (null != f)
+            {
+                f.Close();
+            }
+
+            /* so far so good */
+            return 0;
         }
 
         public static int benchmark_speed(int compress_level, string input_file)
