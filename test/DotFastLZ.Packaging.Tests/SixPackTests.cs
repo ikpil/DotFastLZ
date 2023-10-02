@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using DotFastLZ.Compression.Tests.Fixtures;
 using NUnit.Framework;
 
 namespace DotFastLZ.Packaging.Tests;
@@ -52,25 +53,25 @@ public class SixPackTests
         File.Delete(fastlz1);
         File.Delete(fastlz2);
 
-        GenerateFile(filename, 1024 * 1024);
+        ResourceHelper.GenerateFile(filename, 1024 * 1024);
 
         // pack
         SixPack.PackFile(1, filename, fastlz1);
         SixPack.PackFile(2, filename, fastlz2);
 
-        var sourceMd5 = ComputeMD5(filename);
+        var sourceMd5 = ResourceHelper.ComputeMD5(filename);
         File.Delete(filename);
-        Assert.That(sourceMd5, Is.EqualTo("0e3618ab09fb7e1989a05da990b2911a"));
+        Assert.That(sourceMd5, Is.EqualTo("90e4a4b78ebf7f88b02b0054ab0d6daa"));
         Assert.That(File.Exists(filename), Is.EqualTo(false));
 
         // checksum
-        Assert.That(ComputeMD5(fastlz1), Is.EqualTo("07017027a344938392152e47e5389c34"));
-        Assert.That(ComputeMD5(fastlz2), Is.EqualTo("945b4b347e9b5bd43e86e3b41be09e8b"));
+        Assert.That(ResourceHelper.ComputeMD5(fastlz1), Is.EqualTo("6ca821bdf187f12bf23552133dfa99a1"));
+        Assert.That(ResourceHelper.ComputeMD5(fastlz2), Is.EqualTo("c70d787ea842eba36b7d1479b94c6740"));
 
         // unpack level1
         {
             int status1 = SixPack.UnpackFile(fastlz1);
-            var decompress1Md5 = ComputeMD5(filename);
+            var decompress1Md5 = ResourceHelper.ComputeMD5(filename);
             File.Delete(filename);
             File.Delete(fastlz1);
 
@@ -82,7 +83,7 @@ public class SixPackTests
         // unpack level2
         {
             int status2 = SixPack.UnpackFile(fastlz2);
-            var decompress2Md5 = ComputeMD5(filename);
+            var decompress2Md5 = ResourceHelper.ComputeMD5(filename);
 
             File.Delete(filename);
             File.Delete(fastlz2);
@@ -99,7 +100,7 @@ public class SixPackTests
         const string benchmarkFileName = "benchmark.txt";
         File.Delete(benchmarkFileName);
 
-        GenerateFile(benchmarkFileName, 1024 * 1024 * 8);
+        ResourceHelper.GenerateFile(benchmarkFileName, 1024 * 1024 * 8);
 
         int status1 = SixPack.BenchmarkSpeed(1, benchmarkFileName);
         int status2 = SixPack.BenchmarkSpeed(2, benchmarkFileName);
@@ -129,45 +130,5 @@ public class SixPackTests
 
         Assert.That(SixPack.OpenFile(filename, FileMode.Open), Is.Null);
         Assert.That(SixPack.OpenFile(filename, FileMode.Create, FileAccess.Write), Is.Not.Null);
-    }
-
-    public long GenerateFile(string filename, long size)
-    {
-        var text = "About Adler32 Checksum Calculator The Adler32 Checksum Calculator will compute an Adler32 checksum of string. " +
-                   "Adler32 is a checksum algorithm that was invented by Mark Adler. " +
-                   "In contrast to a cyclic redundancy check (CRC) of the same length, it trades reliability for speed.";
-
-        var bytes = Encoding.UTF8.GetBytes(text);
-
-        using var fs = SixPack.OpenFile(filename, FileMode.Create, FileAccess.Write);
-
-        var count = size / bytes.Length;
-        for (int i = 0; i < count; ++i)
-        {
-            fs.Write(bytes);
-        }
-
-        count = size % bytes.Length;
-        if (0 < count)
-        {
-            fs.Write(bytes, 0, (int)count);
-        }
-
-        return size;
-    }
-
-    public static string ComputeMD5(string filePath)
-    {
-        using var md5 = MD5.Create();
-        using var stream = File.OpenRead(filePath);
-        byte[] hashBytes = md5.ComputeHash(stream);
-        StringBuilder sb = new StringBuilder();
-
-        foreach (byte b in hashBytes)
-        {
-            sb.Append(b.ToString("x2"));
-        }
-
-        return sb.ToString();
     }
 }

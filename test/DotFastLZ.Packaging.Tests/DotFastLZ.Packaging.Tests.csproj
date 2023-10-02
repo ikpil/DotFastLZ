@@ -15,6 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\DotFastLZ.Compression.Tests\DotFastLZ.Compression.Tests.csproj" />
     <ProjectReference Include="..\..\src\DotFastLZ.Packaging\DotFastLZ.Packaging.csproj" />
   </ItemGroup>
 
