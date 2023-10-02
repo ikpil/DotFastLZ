@@ -62,21 +62,16 @@ public static class Program
                 Console.WriteLine("");
                 return 0;
             }
-            
+
             archiveFiles.Add(argument);
         }
 
         for (int i = 0; i < archiveFiles.Count; ++i)
         {
             var archiveFile = archiveFiles[i];
-            unpack_file(archiveFile);
+            SixPack.unpack_file(archiveFile);
         }
 
-        return 0;
-    }
-
-    private static int unpack_file(string s)
-    {
         return 0;
     }
 
