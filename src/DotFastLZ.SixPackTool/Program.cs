@@ -139,11 +139,11 @@ public static class Program
 
         if (benchmark)
         {
-            return SixPack.benchmark_speed(compress_level, input_file);
+            return SixPack.BenchmarkSpeed(compress_level, input_file);
         }
         else
         {
-            return SixPack.pack_file(compress_level, input_file, output_file);
+            return SixPack.PackFile(compress_level, input_file, output_file);
         }
     }
 
