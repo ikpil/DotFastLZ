@@ -4,7 +4,6 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net7.0</TargetFramework>
     <AssemblyName>6pack</AssemblyName>
-    <RootNamespace>DotFastLZ.Packaging.Tools.Cli</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
