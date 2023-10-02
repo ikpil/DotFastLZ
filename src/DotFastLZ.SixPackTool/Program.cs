@@ -67,7 +67,6 @@ public static class Program
             {
                 Console.WriteLine("6pack: high-speed file compression tool");
                 Console.WriteLine($"Version {SixPack.SIXPACK_VERSION_STRING} (using FastLZ {FastLZ.FASTLZ_VERSION_STRING})");
-                Console.WriteLine("Copyright (C) Ariya Hidayat, Choi Ikpil(ikpil@naver.com");
                 Console.WriteLine("");
                 return 0;
             }
@@ -152,6 +151,7 @@ public static class Program
     {
         Console.WriteLine("6pack: high-speed file compression tool");
         Console.WriteLine("Copyright (C) Ariya Hidayat, Choi Ikpil(ikpil@naver.com)");
+        Console.WriteLine(" - https://github.com/ikpil/DotFastLZ");
         Console.WriteLine("");
         Console.WriteLine("Usage: 6pack [options]  input-file  output-file");
         Console.WriteLine("");

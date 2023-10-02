@@ -23,6 +23,9 @@
 */
 
 using System;
+using System.Collections.Generic;
+using DotFastLZ.Compression;
+using DotFastLZ.Package;
 
 namespace DotFastLZ.SixUnpack;
 
@@ -30,7 +33,60 @@ public static class Program
 {
     public static int Main(string[] args)
     {
-        Console.WriteLine("Hello, World!");
+        /* show help with no argument at all*/
+        if (args.Length == 0)
+        {
+            Usage();
+            return 0;
+        }
+
+        var archiveFiles = new List<string>();
+        for (int i = 0; i < args.Length; i++)
+        {
+            var argument = args[i].Trim();
+            if (string.IsNullOrEmpty(argument))
+                continue;
+
+            /* check for help on usage */
+            if (argument == "-h" || argument == "--help")
+            {
+                Usage();
+                return 0;
+            }
+
+            /* check for version information */
+            if (argument == "-v" || argument == "--version")
+            {
+                Console.WriteLine("6unpack: high-speed file compression tool");
+                Console.WriteLine($"Version {SixPack.SIXPACK_VERSION_STRING} (using FastLZ {FastLZ.FASTLZ_VERSION_REVISION})");
+                Console.WriteLine("");
+                return 0;
+            }
+            
+            archiveFiles.Add(argument);
+        }
+
+        for (int i = 0; i < archiveFiles.Count; ++i)
+        {
+            var archiveFile = archiveFiles[i];
+            unpack_file(archiveFile);
+        }
+
         return 0;
+    }
+
+    private static int unpack_file(string s)
+    {
+        return 0;
+    }
+
+    private static void Usage()
+    {
+        Console.WriteLine("6unpack: uncompress 6pack archive");
+        Console.WriteLine("Copyright (C) Ariya Hidayat, Choi Ikpil(ikpil@naver.com)");
+        Console.WriteLine(" - https://github.com/ikpil/DotFastLZ");
+        Console.WriteLine("");
+        Console.WriteLine("Usage: 6unpack archive-file");
+        Console.WriteLine("");
     }
 }
