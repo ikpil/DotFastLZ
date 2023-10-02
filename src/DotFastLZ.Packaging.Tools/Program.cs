@@ -23,10 +23,11 @@
 */
 
 using System;
+using System.IO;
 using DotFastLZ.Compression;
 using DotFastLZ.Packaging;
 
-namespace DotFastLZ.Packaging.SixPackTool;
+namespace DotFastLZ.Packaging.Tools.Cli;
 
 public static class Program
 {
@@ -44,6 +45,8 @@ public static class Program
 
         /* do benchmark only when explicitly specified */
         bool benchmark = false;
+
+        bool decompress = false;
 
         /* no file is specified */
         string input_file = string.Empty;
@@ -91,6 +94,12 @@ public static class Program
                 continue;
             }
 
+            if (argument == "-d")
+            {
+                decompress = true;
+                continue;
+            }
+
             /* unknown option */
             if (argument[0] == '-')
             {
@@ -129,37 +138,43 @@ public static class Program
             return -1;
         }
 
-        if (string.IsNullOrEmpty(output_file) && !benchmark)
+        if (SixPack.FASTLZ_EXTENSION == Path.GetExtension(input_file))
         {
-            Console.WriteLine("Error: output file is not specified.\n");
-            Console.WriteLine("To get help on usage:");
-            Console.WriteLine("  6pack --help\n");
-            return -1;
+            decompress = true;
+        }
+
+        if (string.IsNullOrEmpty(output_file) && !benchmark && !decompress)
+        {
+            output_file = input_file + SixPack.FASTLZ_EXTENSION;
         }
 
         if (benchmark)
         {
             return SixPack.BenchmarkSpeed(compress_level, input_file);
         }
-        else
+
+        if (decompress)
         {
-            return SixPack.PackFile(compress_level, input_file, output_file);
+            return SixPack.UnpackFile(input_file);
         }
+
+        return SixPack.PackFile(compress_level, input_file, output_file);
     }
 
     private static void Usage()
     {
-        Console.WriteLine("6pack: high-speed file compression tool");
-        Console.WriteLine("Copyright (C) Ariya Hidayat, Choi Ikpil(ikpil@naver.com)");
-        Console.WriteLine(" - https://github.com/ikpil/DotFastLZ");
-        Console.WriteLine("");
-        Console.WriteLine("Usage: 6pack [options]  input-file  output-file");
-        Console.WriteLine("");
-        Console.WriteLine("Options:");
-        Console.WriteLine("  -1    compress faster");
-        Console.WriteLine("  -2    compress better");
-        Console.WriteLine("  -v    show program version");
-        Console.WriteLine("  -mem  check in-memory compression speed");
-        Console.WriteLine("");
+        Console.WriteLine($"6pack: high-speed file compression tool");
+        Console.WriteLine($"Copyright (C) Ariya Hidayat, Choi Ikpil(ikpil@naver.com)");
+        Console.WriteLine($" - https://github.com/ikpil/DotFastLZ");
+        Console.WriteLine($"");
+        Console.WriteLine($"Usage: 6pack [options] input-file output-file");
+        Console.WriteLine($"");
+        Console.WriteLine($"Options:");
+        Console.WriteLine($"  -1    compress faster");
+        Console.WriteLine($"  -2    compress better");
+        Console.WriteLine($"  -v    show program version");
+        Console.WriteLine($"  -d    decompression (default for {SixPack.FASTLZ_EXTENSION} extension)");
+        Console.WriteLine($"  -mem  check in-memory compression speed");
+        Console.WriteLine($"");
     }
 }
