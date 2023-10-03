@@ -1,13 +1,19 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <TargetFramework>netstandard2.1</TargetFramework>
-        <PackageId>DotFastLZ.Compression</PackageId>
-        <PackageReadmeFile>README.md</PackageReadmeFile>
-    </PropertyGroup>
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <PackageId>DotFastLZ.Compression</PackageId>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <Authors>ikpil</Authors>
+    <Description>Small and portable byte-aligned LZ77 compression for C#</Description>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/ikpil/DotFastLZ</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ikpil/DotFastLZ</RepositoryUrl>
+    <PackageTags>compression fastlz unity3d lz77</PackageTags>
+  </PropertyGroup>
 
-    <ItemGroup>
-        <None Include="../../README.md" Pack="true" PackagePath="\"/>
-    </ItemGroup>
+  <ItemGroup>
+    <None Include="../../README.md" Pack="true" PackagePath="\"/>
+  </ItemGroup>
 
 </Project>

@@ -4,6 +4,12 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <PackageId>DotFastLZ.Packaging</PackageId>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <Authors>ikpil</Authors>
+    <Description>Small and portable byte-aligned LZ77 compression for C#</Description>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/ikpil/DotFastLZ</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ikpil/DotFastLZ</RepositoryUrl>
+    <PackageTags>compression fastlz unity3d lz77</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
@@ -11,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DotFastLZ.Compression\DotFastLZ.Compression.csproj" />
+    <ProjectReference Include="..\DotFastLZ.Compression\DotFastLZ.Compression.csproj"/>
   </ItemGroup>
 
 </Project>

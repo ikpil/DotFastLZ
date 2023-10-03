@@ -6,14 +6,20 @@
     <AssemblyName>6pack</AssemblyName>
     <PackageId>DotFastLZ.Packaging.Tools</PackageId>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <Authors>ikpil</Authors>
+    <Description>Small and portable byte-aligned LZ77 compression for C#</Description>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/ikpil/DotFastLZ</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ikpil/DotFastLZ</RepositoryUrl>
+    <PackageTags>compression fastlz unity3d lz77</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
     <None Include="../../README.md" Pack="true" PackagePath="\"/>
   </ItemGroup>
-  
+
   <ItemGroup>
-    <ProjectReference Include="..\DotFastLZ.Packaging\DotFastLZ.Packaging.csproj" />
+    <ProjectReference Include="..\DotFastLZ.Packaging\DotFastLZ.Packaging.csproj"/>
   </ItemGroup>
 
 </Project>
