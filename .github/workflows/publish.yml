@@ -26,18 +26,7 @@ jobs:
       - name: version check
         if: success()
         run: echo ok
-
-      - name: Set Environment Variables
-        run: |
-          PACK_OPTIONS="/p:Authors=ikpil"
-          PACK_OPTIONS+=" /p:Description=\"Small & portable byte-aligned LZ77 compression for C#\""
-          PACK_OPTIONS+=" /p:RepositoryType=git"
-          PACK_OPTIONS+=" /p:PackageProjectUrl=https://github.com/ikpil/DotFastLZ"
-          PACK_OPTIONS+=" /p:RepositoryUrl=https://github.com/ikpil/DotFastLZ"
-          PACK_OPTIONS+=" /p:PackageTags=\"compression fastlz unity3d lz77\""
-          export PACK_OPTIONS
-          echo $PACK_OPTIONS
-          
+        
       - name: Checkout
         uses: actions/checkout@v3
         with:
@@ -58,7 +47,14 @@ jobs:
         run: dotnet test -c Release --no-build --verbosity normal
       
       - name: Pack
-        run: dotnet pack $PACK_OPTIONS /p:PackageVersion=${{ github.event.inputs.version }} -c Release --nologo --output working-nuget
+        run: |
+          PACK_OPTIONS="/p:Authors=ikpil"
+          PACK_OPTIONS+=" /p:Description=\"Small & portable byte-aligned LZ77 compression for C#\""
+          PACK_OPTIONS+=" /p:RepositoryType=git"
+          PACK_OPTIONS+=" /p:PackageProjectUrl=https://github.com/ikpil/DotFastLZ"
+          PACK_OPTIONS+=" /p:RepositoryUrl=https://github.com/ikpil/DotFastLZ"
+          PACK_OPTIONS+=" /p:PackageTags=\"compression fastlz unity3d lz77\""
+          dotnet pack $PACK_OPTIONS /p:PackageVersion=${{ github.event.inputs.version }} -c Release --nologo --output working-nuget
 
       - name: Publish the package to nuget.org
         run: dotnet nuget push ./working-nuget/*.nupkg -k $NUGET_AUTH_TOKEN -s https://api.nuget.org/v3/index.json
