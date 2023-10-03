@@ -1,13 +1,9 @@
 
 name: Release
-
 on:
-  workflow_dispatch:
-    inputs:
-      version:
-        description: version
-        required: true
-        type: string
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
 
 jobs:
   build:
@@ -31,16 +27,26 @@ jobs:
       - name: publish to local
         run: dotnet publish src/DotFastLZ.Packaging.Tools -c Release --no-restore --no-self-contained --output working-temp
 
+      - name: version
+        id: version
+        run: |
+          tag=${GITHUB_REF/refs\/tags\//}
+          version=${tag}
+          major=${version%%.*}
+          echo "tag=${tag}" >> $GITHUB_OUTPUT
+          echo "version=${version}" >> $GITHUB_OUTPUT
+          echo "major=${major}" >> $GITHUB_OUTPUT
+
       - name: Zip
         run: |
           cd working-temp
           echo "dotnet DotFastLZ.Packaging.Tools.dll" > run.bat
-          zip -r ../DotFastLZ.Packaging.Tools-${{ github.event.inputs.version }}.zip ./
+          zip -r ../DotFastLZ.Packaging.Tools-${{ steps.version.outputs.version}}.zip ./
         if: success()
 
       - uses: release-drafter/release-drafter@master
         with:
-          version: ${{ github.event.inputs.version }}
+          version: ${{ steps.version.outputs.version }}
           publish: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -49,12 +55,8 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            DotFastLZ.Packaging.Tools-${{ github.event.inputs.version }}.zip
+            DotFastLZ.Packaging.Tools-${{ steps.version.outputs.version}}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
-      - name: force update version tag
-        run: |
-          git tag ${{ github.event.inputs.version }}
-          git push origin refs/tags/${{ github.event.inputs.version }} -f
+
         
