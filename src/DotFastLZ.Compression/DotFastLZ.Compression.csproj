@@ -3,18 +3,10 @@
     <PropertyGroup>
         <TargetFramework>netstandard2.1</TargetFramework>
         <PackageId>DotFastLZ.Compression</PackageId>
-        <Version>2023.8.6.1</Version>
-        <Authors>ikpil</Authors>
-        <Description>FastLZ</Description>
-        <RepositoryType>git</RepositoryType>
-        <PackageProjectUrl>https://github.com/ikpil/DotFastLZ</PackageProjectUrl>
-        <RepositoryUrl>https://github.com/ikpil/DotFastLZ</RepositoryUrl>
-        <PackageReadmeFile>README.md</PackageReadmeFile>
-        <PackageTags>compression fastlz unity3d</PackageTags>
     </PropertyGroup>
 
     <ItemGroup>
-        <None Include="docs\README.md" Pack="true" PackagePath="\"/>
+        <None Include="../../README.md" Pack="true" PackagePath="\"/>
     </ItemGroup>
 
 </Project>

@@ -4,17 +4,15 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net7.0</TargetFramework>
     <AssemblyName>6pack</AssemblyName>
+    <PackageId>DotFastLZ.Packaging.Tools</PackageId>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DotFastLZ.Packaging\DotFastLZ.Packaging.csproj" />
+    <None Include="../../README.md" Pack="true" PackagePath="\"/>
   </ItemGroup>
-
+  
   <ItemGroup>
-    <None Update="docs\README.md">
-      <Pack>true</Pack>
-      <PackagePath>\</PackagePath>
-    </None>
+    <ProjectReference Include="..\DotFastLZ.Packaging\DotFastLZ.Packaging.csproj" />
   </ItemGroup>
 
 </Project>

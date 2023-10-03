@@ -397,5 +397,4 @@ FodyWeavers.xsd
 .idea/
 
 # custom
-packages/
 resources/compression-corpus/
