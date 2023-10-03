@@ -11,7 +11,6 @@ on:
 jobs:
   publish-to-nuget:
     runs-on: ubuntu-latest
-
     steps:
       - name: version pattern
         id: check-version
@@ -27,11 +26,6 @@ jobs:
       - name: version check
         if: success()
         run: echo ok
-
-        env:
-          REPO_URL: 
-          README_FILE: 
-          TAGS: 
 
       - name: Set Environment Variables
         run: |
