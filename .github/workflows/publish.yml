@@ -59,3 +59,8 @@ jobs:
       
       - name: Pack
         run: dotnet pack $PACK_OPTIONS /p:PackageVersion=${{ github.event.inputs.version }} -c Release --nologo --output working-nuget
+
+      - name: Publish the package to nuget.org
+        run: dotnet nuget push ./working-nuget/*.nupkg -k $NUGET_AUTH_TOKEN -s https://api.nuget.org/v3/index.json
+        env:
+          NUGET_AUTH_TOKEN: ${{ secrets.NUGET_TOKEN }}
