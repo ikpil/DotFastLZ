@@ -9,11 +9,25 @@ on:
         type: string
         
 jobs:
-  build:
-
+  publish-to-nuget:
     runs-on: ubuntu-latest
-
+    
     steps:
+      - name: version pattern
+        id: check-version
+        run: |
+          version="${{ github.event.inputs.version }}"
+          if [[ $version =~ [0-9]+\.[0-9]+\.[0-9]+ ]]; then
+            echo "Input matches pattern: $version"
+          else
+            echo "Input does not match pattern: $version"
+          exit 1
+          fi
+
+      - name: version check
+        if: success()
+        run: echo ok
+
       - name: Checkout
         uses: actions/checkout@v3
 
@@ -26,6 +40,7 @@ jobs:
         run: dotnet restore
 
       - name: Build
-        run: dotnet build --no-restore
+        run: dotnet build -C Release --no-restore
+
       - name: Test
-        run: dotnet test --no-build --verbosity normal
+        run: dotnet test -c Release --no-build --verbosity normal

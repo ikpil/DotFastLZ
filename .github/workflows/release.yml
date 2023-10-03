@@ -6,7 +6,7 @@ on:
       - '[0-9]+.[0-9]+.[0-9]+'
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
 
     steps:
@@ -23,6 +23,9 @@ jobs:
 
       - name: build
         run: dotnet build -c Release --no-restore
+
+      - name: Test
+        run: dotnet test -c Release --no-build --verbosity normal
 
       - name: publish to local
         run: dotnet publish src/DotFastLZ.Packaging.Tools -c Release --no-restore --no-self-contained --output working-temp
