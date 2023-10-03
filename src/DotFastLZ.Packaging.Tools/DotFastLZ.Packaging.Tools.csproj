@@ -7,7 +7,7 @@
     <PackageId>DotFastLZ.Packaging.Tools</PackageId>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <Authors>ikpil</Authors>
-    <Description>Small and portable byte-aligned LZ77 compression for C#</Description>
+    <Description>DotFastLZ - a port of FastLZ, Small and portable byte-aligned LZ77 compression for C#</Description>
     <RepositoryType>git</RepositoryType>
     <PackageProjectUrl>https://github.com/ikpil/DotFastLZ</PackageProjectUrl>
     <RepositoryUrl>https://github.com/ikpil/DotFastLZ</RepositoryUrl>
