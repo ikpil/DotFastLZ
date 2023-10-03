@@ -150,15 +150,15 @@ public static class Program
 
         if (benchmark)
         {
-            return SixPack.BenchmarkSpeed(compress_level, input_file);
+            return SixPack.BenchmarkSpeed(compress_level, input_file, Console.Write);
         }
 
         if (decompress)
         {
-            return SixPack.UnpackFile(input_file);
+            return SixPack.UnpackFile(input_file, Console.Write);
         }
 
-        return SixPack.PackFile(compress_level, input_file, output_file);
+        return SixPack.PackFile(compress_level, input_file, output_file, Console.Write);
     }
 
     private static void Usage()

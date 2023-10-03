@@ -156,7 +156,7 @@ namespace DotFastLZ.Packaging
 
 
         // pack_file_compressed
-        private static int PackFileCompressed(string input_file, int method, int level, FileStream f)
+        private static int PackFileCompressed(string input_file, int method, int level, FileStream ofs, Action<string> logger)
         {
             ulong checksum;
             byte[] result = new byte[BLOCK_SIZE * 2]; /* FIXME twice is too large */
@@ -165,7 +165,7 @@ namespace DotFastLZ.Packaging
             FileStream temp = OpenFile(input_file, FileMode.Open);
             if (null == temp)
             {
-                Console.WriteLine($"Error: could not open {input_file}");
+                logger?.Invoke($"Error: could not open {input_file}\n");
                 return -1;
             }
 
@@ -179,7 +179,7 @@ namespace DotFastLZ.Packaging
             /* already a 6pack archive? */
             if (DetectMagicByFileStream(ifs))
             {
-                Console.WriteLine($"Error: file {input_file} is already a 6pack archive!");
+                logger?.Invoke($"Error: file {input_file} is already a 6pack archive!\n");
                 return -1;
             }
 
@@ -206,9 +206,9 @@ namespace DotFastLZ.Packaging
             checksum = 1L;
             checksum = Adler32(checksum, buffer, 10);
             checksum = Adler32(checksum, shown_name, shown_name.Length);
-            WriteChunkHeader(f, 1, 0, 10 + shown_name.Length, checksum, 0);
-            f.Write(buffer, 0, 10);
-            f.Write(shown_name, 0, shown_name.Length);
+            WriteChunkHeader(ofs, 1, 0, 10 + shown_name.Length, checksum, 0);
+            ofs.Write(buffer, 0, 10);
+            ofs.Write(shown_name, 0, shown_name.Length);
             long total_compressed = 16 + 10 + shown_name.Length;
 
             /* for progress status */
@@ -224,14 +224,14 @@ namespace DotFastLZ.Packaging
             }
 
 
-            Console.Write($"{progress} [");
+            logger?.Invoke($"{progress} [");
             for (int c = 0; c < 50; c++)
             {
-                Console.Write(".");
+                logger?.Invoke(".");
             }
 
-            Console.Write("]\r");
-            Console.Write($"{progress} [");
+            logger?.Invoke("]\r");
+            logger?.Invoke($"{progress} [");
 
             /* read file and place ifs archive */
             long total_read = 0;
@@ -260,7 +260,7 @@ namespace DotFastLZ.Packaging
                 percent /= 2;
                 while (last_percent < (int)percent)
                 {
-                    Console.Write("#");
+                    logger?.Invoke("#");
                     last_percent++;
                 }
 
@@ -278,8 +278,8 @@ namespace DotFastLZ.Packaging
                     {
                         long chunkSize = FastLZ.CompressLevel(level, buffer, bytes_read, result);
                         checksum = Adler32(1L, result, chunkSize);
-                        WriteChunkHeader(f, 17, 1, chunkSize, checksum, bytes_read);
-                        f.Write(result, 0, (int)chunkSize);
+                        WriteChunkHeader(ofs, 17, 1, chunkSize, checksum, bytes_read);
+                        ofs.Write(result, 0, (int)chunkSize);
                         total_compressed += 16;
                         total_compressed += chunkSize;
                     }
@@ -291,8 +291,8 @@ namespace DotFastLZ.Packaging
                     {
                         checksum = 1L;
                         checksum = Adler32(checksum, buffer, bytes_read);
-                        WriteChunkHeader(f, 17, 0, bytes_read, checksum, bytes_read);
-                        f.Write(buffer, 0, bytes_read);
+                        WriteChunkHeader(ofs, 17, 0, bytes_read, checksum, bytes_read);
+                        ofs.Write(buffer, 0, bytes_read);
                         total_compressed += 16;
                         total_compressed += bytes_read;
                     }
@@ -302,13 +302,13 @@ namespace DotFastLZ.Packaging
 
             if (total_read != fsize)
             {
-                Console.WriteLine("");
-                Console.WriteLine($"Error: reading {input_file} failed!");
+                logger?.Invoke("\n");
+                logger?.Invoke($"Error: reading {input_file} failed!\n");
                 return -1;
             }
             else
             {
-                Console.Write("] ");
+                logger?.Invoke("] ");
                 if (total_compressed < fsize)
                 {
                     if (fsize < (1 << 20))
@@ -325,10 +325,10 @@ namespace DotFastLZ.Packaging
                     var elapsedTicks = (GetTickCount64() - beginTick);
                     var elapsedMs = elapsedTicks / TimeSpan.TicksPerMillisecond;
                     var elapsedMicro = elapsedTicks / (TimeSpan.TicksPerMillisecond / 1000);
-                    Console.Write($"{(int)percent / 10:D2}.{(int)percent % 10:D1}% saved - {elapsedMs} ms, {elapsedMicro} micro");
+                    logger?.Invoke($"{(int)percent / 10:D2}.{(int)percent % 10:D1}% saved - {elapsedMs} ms, {elapsedMicro} micro");
                 }
 
-                Console.WriteLine("");
+                logger?.Invoke("\n");
             }
 
             return 0;
@@ -336,7 +336,7 @@ namespace DotFastLZ.Packaging
 
 
         // pack_file
-        public static int PackFile(int compress_level, string input_file, string output_file)
+        public static int PackFile(int compress_level, string input_file, string output_file, Action<string> logger = null)
         {
             int result;
 
@@ -344,26 +344,26 @@ namespace DotFastLZ.Packaging
             if (null != fs)
             {
                 fs.Dispose();
-                Console.WriteLine($"Error: file {output_file} already exists. Aborted.");
+                logger?.Invoke($"Error: file {output_file} already exists. Aborted.\n");
                 return -1;
             }
 
             fs = OpenFile(output_file, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
             if (null == fs)
             {
-                Console.WriteLine($"Error: could not create {output_file}. Aborted.");
+                logger?.Invoke($"Error: could not create {output_file}. Aborted.\n");
                 return -1;
             }
 
             using var ofs = fs;
 
             WriteMagic(ofs);
-            result = PackFileCompressed(input_file, 1, compress_level, ofs);
+            result = PackFileCompressed(input_file, 1, compress_level, ofs, logger);
             return result;
         }
 
         // unpack_file
-        public static int UnpackFile(string input_file)
+        public static int UnpackFile(string input_file, Action<string> logger = null)
         {
             ulong checksum;
 
@@ -371,7 +371,7 @@ namespace DotFastLZ.Packaging
             var tempFs = OpenFile(input_file, FileMode.Open);
             if (null == tempFs)
             {
-                Console.WriteLine($"Error: could not open {input_file}");
+                logger?.Invoke($"Error: could not open {input_file}\n");
                 return -1;
             }
 
@@ -385,11 +385,11 @@ namespace DotFastLZ.Packaging
             /* not a 6pack archive? */
             if (!DetectMagicByFileStream(ifs))
             {
-                Console.WriteLine($"Error: file {input_file} is not a 6pack archive!");
+                logger?.Invoke($"Error: file {input_file} is not a 6pack archive!\n");
                 return -1;
             }
 
-            Console.Write($"Archive: {input_file}");
+            logger?.Invoke($"Archive: {input_file}");
 
             /* position of first chunk */
             ifs.Seek(8, SeekOrigin.Begin);
@@ -429,7 +429,7 @@ namespace DotFastLZ.Packaging
                 if (chunk_id == 1 && chunk_size > 10 && chunk_size < BLOCK_SIZE)
                 {
                     /* close current file, if any */
-                    Console.WriteLine("");
+                    logger?.Invoke("\n");
                     if (null != ofs)
                     {
                         ofs.Close();
@@ -441,8 +441,8 @@ namespace DotFastLZ.Packaging
                     checksum = Adler32(1L, buffer, chunk_size);
                     if (checksum != chunk_checksum)
                     {
-                        Console.WriteLine("\nError: checksum mismatch!");
-                        Console.WriteLine($"Got {checksum:X8} Expecting {chunk_checksum:X8}");
+                        logger?.Invoke("\nError: checksum mismatch!\n");
+                        logger?.Invoke($"Got {checksum:X8} Expecting {chunk_checksum:X8}\n");
                         return -1;
                     }
 
@@ -462,7 +462,7 @@ namespace DotFastLZ.Packaging
                     {
                         ofs.Close();
                         ofs = null;
-                        Console.WriteLine($"File {output_file} already exists. Skipped.");
+                        logger?.Invoke($"File {output_file} already exists. Skipped.\n");
                     }
                     else
                     {
@@ -470,12 +470,12 @@ namespace DotFastLZ.Packaging
                         ofs = OpenFile(output_file, FileMode.CreateNew, FileAccess.Write, FileShare.Write);
                         if (null == ofs)
                         {
-                            Console.WriteLine($"Can't create file {output_file} Skipped.");
+                            logger?.Invoke($"Can't create file {output_file} Skipped.\n");
                         }
                         else
                         {
                             /* for progress status */
-                            Console.WriteLine("");
+                            logger?.Invoke("\n");
                             string progress;
                             if (16 < output_file.Length)
                             {
@@ -488,14 +488,14 @@ namespace DotFastLZ.Packaging
                             }
 
 
-                            Console.Write($"{progress} [");
+                            logger?.Invoke($"{progress} [");
                             for (int c = 0; c < 50; c++)
                             {
-                                Console.Write(".");
+                                logger?.Invoke(".");
                             }
 
-                            Console.Write("]\r");
-                            Console.Write($"{progress} [");
+                            logger?.Invoke("]\r");
+                            logger?.Invoke($"{progress} [");
                         }
                     }
                 }
@@ -531,8 +531,8 @@ namespace DotFastLZ.Packaging
                             /* verify everything is written correctly */
                             if (checksum != chunk_checksum)
                             {
-                                Console.WriteLine("\nError: checksum mismatch. Aborted.");
-                                Console.WriteLine($"Got {checksum:X8} Expecting {chunk_checksum:X8}");
+                                logger?.Invoke("\nError: checksum mismatch. Aborted.\n");
+                                logger?.Invoke($"Got {checksum:X8} Expecting {chunk_checksum:X8}\n");
                             }
                         }
                             break;
@@ -562,8 +562,8 @@ namespace DotFastLZ.Packaging
                             /* verify that the chunk data is correct */
                             if (checksum != chunk_checksum)
                             {
-                                Console.WriteLine("\nError: checksum mismatch. Skipped.");
-                                Console.WriteLine($"Got {checksum:X8} Expecting {chunk_checksum:X8}");
+                                logger?.Invoke("\nError: checksum mismatch. Skipped.\n");
+                                logger?.Invoke($"Got {checksum:X8} Expecting {chunk_checksum:X8}\n");
                             }
                             else
                             {
@@ -571,7 +571,7 @@ namespace DotFastLZ.Packaging
                                 remaining = FastLZ.Decompress(compressed_buffer, chunk_size, decompressed_buffer, chunk_extra);
                                 if (remaining != chunk_extra)
                                 {
-                                    Console.WriteLine("\nError: decompression failed. Skipped.");
+                                    logger?.Invoke("\nError: decompression failed. Skipped.\n");
                                 }
                                 else
                                 {
@@ -582,7 +582,7 @@ namespace DotFastLZ.Packaging
                             break;
 
                         default:
-                            Console.WriteLine($"\nError: unknown compression method ({chunk_options})");
+                            logger?.Invoke($"\nError: unknown compression method ({chunk_options})\n");
                             break;
                     }
 
@@ -602,13 +602,13 @@ namespace DotFastLZ.Packaging
                         percent >>= 1;
                         while (last_percent < (int)percent)
                         {
-                            Console.Write("#");
+                            logger?.Invoke("#");
                             last_percent++;
                         }
 
                         if (total_extracted == decompressed_size)
                         {
-                            Console.WriteLine($"]");
+                            logger?.Invoke($"]\n");
                         }
                     }
                 }
@@ -617,8 +617,8 @@ namespace DotFastLZ.Packaging
                 ifs.Seek(pos + 16 + chunk_size, SeekOrigin.Begin);
             }
 
-            Console.WriteLine("");
-            Console.WriteLine("");
+            logger?.Invoke("\n");
+            logger?.Invoke("\n");
 
             /* close working files */
             if (null != ofs)
@@ -631,13 +631,13 @@ namespace DotFastLZ.Packaging
         }
 
         // benchmark_speed
-        public static int BenchmarkSpeed(int compress_level, string input_file)
+        public static int BenchmarkSpeed(int compress_level, string input_file, Action<string> logger = null)
         {
             /* sanity check */
             var fs = OpenFile(input_file, FileMode.Open);
             if (null == fs)
             {
-                Console.WriteLine($"Error: could not open {input_file}");
+                logger?.Invoke($"Error: could not open {input_file}\n");
                 return -1;
             }
 
@@ -651,7 +651,7 @@ namespace DotFastLZ.Packaging
             /* already a 6pack archive? */
             if (DetectMagicByFileStream(ifs))
             {
-                Console.WriteLine("Error: no benchmark for 6pack archive!");
+                logger?.Invoke("Error: no benchmark for 6pack archive!\n");
                 return -1;
             }
 
@@ -666,16 +666,16 @@ namespace DotFastLZ.Packaging
             /* for benchmark */
             // if (null == buffer || null == result)
             // {
-            //     Console.WriteLine("Error: not enough memory!");
+            //     logger?.Invoke("Error: not enough memory!\n\n");
             //     return -1;
             // }
 
-            Console.WriteLine("Reading source file....");
+            logger?.Invoke("Reading source file....\n");
             int bytes_read = ifs.Read(buffer, 0, (int)fsize);
             if (bytes_read != fsize)
             {
-                Console.WriteLine($"Error reading file {shown_name}!");
-                Console.WriteLine($"Read {bytes_read} bytes, expecting {fsize} bytes");
+                logger?.Invoke($"Error reading file {shown_name}!\n");
+                logger?.Invoke($"Read {bytes_read} bytes, expecting {fsize} bytes\n");
                 return -1;
             }
 
@@ -683,13 +683,13 @@ namespace DotFastLZ.Packaging
             {
 
                 // multi platform error
-                // Console.WriteLine("Setting HIGH_PRIORITY_CLASS...");
+                // logger?.Invoke("Setting HIGH_PRIORITY_CLASS...\n\n");
                 // {
                 //      Process currentProcess = Process.GetCurrentProcess();
                 //      currentProcess.PriorityClass = ProcessPriorityClass.High;
                 // }
 
-                Console.WriteLine($"Benchmarking FastLZ Level {compress_level}, please wait...");
+                logger?.Invoke($"Benchmarking FastLZ Level {compress_level}, please wait...\n");
 
                 long u = 0;
                 long fastest = 0;
@@ -717,7 +717,7 @@ namespace DotFastLZ.Packaging
                     }
                 }
 
-                Console.WriteLine($"Compressed {bytes_read} bytes into {u} bytes ({(u * 100.0d / bytes_read):F1}%) at {fastest / (double)1000:F1} Mbyte/s.");
+                logger?.Invoke($"Compressed {bytes_read} bytes into {u} bytes ({(u * 100.0d / bytes_read):F1}%) at {fastest / (double)1000:F1} Mbyte/s.\n");
 
                 fastest = 0;
                 long compressed_size = u;
@@ -743,7 +743,7 @@ namespace DotFastLZ.Packaging
                     }
                 }
 
-                Console.WriteLine($"\nDecompressed at {fastest / (double)1000:F1} Mbyte/s.\n\n(1 MB = 1000000 byte)");
+                logger?.Invoke($"\nDecompressed at {fastest / (double)1000:F1} Mbyte/s.\n\n(1 MB = 1000000 byte)\n");
             }
 
             return 0;
@@ -770,7 +770,6 @@ namespace DotFastLZ.Packaging
             }
             catch (Exception /* e */)
             {
-                //Console.WriteLine(e.Message);
                 return null;
             }
         }
