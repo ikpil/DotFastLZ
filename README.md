@@ -5,7 +5,8 @@
 ![Languages](https://img.shields.io/github/languages/top/ikpil/DotFastLZ)
 ## Introduction
 
-DotFastLZ is a C# port of [ariya/FastLZ](https://github.com/ariya/FastLZ) for C# projects and Unity3D.
+- DotFastLZ is a C# port of [ariya/FastLZ](https://github.com/ariya/FastLZ)
+- DotFastLZ can be used in C# projects and Unity3D, and it's great for compressing small, repetitive data.
 
 ## Usage: FastLZ
 ```csharp
