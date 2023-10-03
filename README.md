@@ -15,7 +15,7 @@ for (int level = 1; level <= 2; ++level)
     // compress
     var input = GetInputSource();
     var estimateSize = FastLZ.EstimateCompressedSize(input.Length);
-    var comBuf = new byte[estimateSize]~~~~;
+    var comBuf = new byte[estimateSize];
     var comBufSize = FastLZ.CompressLevel(level, input, input.Length, comBuf);
 
     // decompress
