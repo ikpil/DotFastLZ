@@ -94,28 +94,38 @@ public static class ResourceHelper
 
         return Path.GetFullPath(pathName);
     }
-
-    public static int ExtractZipFile(string zipFilePath, string extractPath)
+    
+    public static int ExtractZipFile(string zipFilePath, string destDir)
     {
         int count = 0;
         try
         {
-            if (!Directory.Exists(extractPath))
-                Directory.CreateDirectory(extractPath);
+            if (string.IsNullOrEmpty(destDir))
+                destDir = string.Empty;
+            
+            if (!Directory.Exists(destDir))
+            {
+                Directory.CreateDirectory(destDir);
+            }
 
             using var archive = ZipFile.OpenRead(zipFilePath);
             foreach (ZipArchiveEntry entry in archive.Entries)
             {
-                string entryPath = Path.Combine(extractPath, entry.FullName);
+                // https://cwe.mitre.org/data/definitions/22.html
+                string destFileName = Path.Combine(destDir, entry.FullName);
+                string fullDestDirPath = Path.GetFullPath(destDir + Path.DirectorySeparatorChar);
+                if (!destFileName.StartsWith(fullDestDirPath)) {
+                    throw new InvalidOperationException($"Entry is outside the target dir: {destFileName}");
+                }
 
                 if (entry.FullName.EndsWith("/"))
                 {
-                    Directory.CreateDirectory(entryPath);
+                    Directory.CreateDirectory(destFileName);
                 }
                 else
                 {
-                    entry.ExtractToFile(entryPath, true);
-                    Console.WriteLine($"extract file - {entryPath}");
+                    entry.ExtractToFile(destFileName, true);
+                    Console.WriteLine($"extract file - {destFileName}");
                 }
 
                 count += 1;
