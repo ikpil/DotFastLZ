@@ -56,8 +56,8 @@ public class SixPackTests
         ResourceHelper.GenerateFile(filename, 1024 * 1024);
 
         // pack
-        SixPack.PackFile(1, filename, fastlz1);
-        SixPack.PackFile(2, filename, fastlz2);
+        SixPack.PackFile(1, filename, fastlz1, Console.Write);
+        SixPack.PackFile(2, filename, fastlz2, Console.Write);
 
         var sourceMd5 = ResourceHelper.ComputeMD5(filename);
         File.Delete(filename);
@@ -70,7 +70,7 @@ public class SixPackTests
 
         // unpack level1
         {
-            int status1 = SixPack.UnpackFile(fastlz1);
+            int status1 = SixPack.UnpackFile(fastlz1, Console.Write);
             var decompress1Md5 = ResourceHelper.ComputeMD5(filename);
             File.Delete(filename);
             File.Delete(fastlz1);
@@ -82,7 +82,7 @@ public class SixPackTests
 
         // unpack level2
         {
-            int status2 = SixPack.UnpackFile(fastlz2);
+            int status2 = SixPack.UnpackFile(fastlz2, Console.Write);
             var decompress2Md5 = ResourceHelper.ComputeMD5(filename);
 
             File.Delete(filename);
@@ -102,8 +102,8 @@ public class SixPackTests
 
         ResourceHelper.GenerateFile(benchmarkFileName, 1024 * 1024 * 8);
 
-        int status1 = SixPack.BenchmarkSpeed(1, benchmarkFileName);
-        int status2 = SixPack.BenchmarkSpeed(2, benchmarkFileName);
+        int status1 = SixPack.BenchmarkSpeed(1, benchmarkFileName, Console.Write);
+        int status2 = SixPack.BenchmarkSpeed(2, benchmarkFileName, Console.Write);
 
         Assert.That(status1, Is.EqualTo(0));
         Assert.That(status2, Is.EqualTo(0));
