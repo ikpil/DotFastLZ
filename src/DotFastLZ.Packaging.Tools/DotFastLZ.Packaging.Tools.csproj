@@ -5,6 +5,7 @@
     <TargetFramework>net7.0</TargetFramework>
     <AssemblyName>6pack</AssemblyName>
     <PackageId>DotFastLZ.Packaging.Tools</PackageId>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>

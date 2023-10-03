@@ -34,7 +34,6 @@ jobs:
           PACK_OPTIONS+=" /p:RepositoryType=git"
           PACK_OPTIONS+=" /p:PackageProjectUrl=https://github.com/ikpil/DotFastLZ"
           PACK_OPTIONS+=" /p:RepositoryUrl=https://github.com/ikpil/DotFastLZ"
-          PACK_OPTIONS+=" /p:PackageReadmeFile=README.md"
           PACK_OPTIONS+=" /p:PackageTags=\"compression fastlz unity3d lz77\""
           export PACK_OPTIONS
           echo $PACK_OPTIONS
