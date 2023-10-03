@@ -24,8 +24,8 @@ jobs:
       - name: build
         run: dotnet build -c Release --no-restore
 
-      - name: publish
-        run: dotnet publish src/DotFastLZ.SixPack -c Release --no-restore --no-self-contained --output working-temp
+      - name: publish to local
+        run: dotnet publish src/DotFastLZ.Packaging.Tools -c Release --no-restore --no-self-contained --output working-temp
 
       - name: version
         id: version
@@ -38,10 +38,9 @@ jobs:
           echo "major=${major}" >> $GITHUB_OUTPUT
 
       - name: Zip
-        working-directory: ${{ env.working-directory }}
         run: |
           cd working-temp
-          echo "dotnet DotFastLZ.SixPack.dll" > run.bat
+          echo "dotnet DotFastLZ.Packaging.Tools.dll" > run.bat
           zip -r ../DotFastLZ.SixPack-${{ steps.version.outputs.version}}.zip ./
         if: success()
 
@@ -56,7 +55,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            DotFastLZ.SixPack-${{ steps.version.outputs.version}}.zip
+            DotFastLZ.Packaging.Tools-${{ steps.version.outputs.version}}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
