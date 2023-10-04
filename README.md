@@ -8,7 +8,7 @@
 - DotFastLZ is a C# port of FastLZ [ariya/FastLZ](https://github.com/ariya/FastLZ)
 - DotFastLZ can be used in C# projects and Unity3D, and it's great for compressing small, repetitive data.
 
-## Usage: FastLZ
+## Usage: DotFastLZ.Compression
 ```csharp
 for (int level = 1; level <= 2; ++level)
 {
@@ -31,7 +31,7 @@ for (int level = 1; level <= 2; ++level)
 }
 ```
 
-## Usage: 6pack
+## Usage: DotFastLZ.Packaging.Tools
 ```shell
 $ 6pack --help
 
