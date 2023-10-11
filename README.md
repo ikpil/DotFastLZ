@@ -1,14 +1,16 @@
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![.NET](https://github.com/ikpil/DotFastLZ/actions/workflows/dotnet.yml/badge.svg)](https://github.com/ikpil/DotFastLZ/actions/workflows/dotnet.yml)
 [![CodeQL](https://github.com/ikpil/DotFastLZ/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/ikpil/DotFastLZ/actions/workflows/github-code-scanning/codeql)
+[![NuGet Version and Downloads count](https://buildstats.info/nuget/DotFastLZ.Compression)](https://www.nuget.org/packages/DotFastLZ.Compression)
 ![Repo Size](https://img.shields.io/github/repo-size/ikpil/DotFastLZ.svg?colorB=lightgray)
 ![Languages](https://img.shields.io/github/languages/top/ikpil/DotFastLZ)
-## Introduction
+
+## Introduction ##
 
 - DotFastLZ is a C# port of FastLZ [ariya/FastLZ](https://github.com/ariya/FastLZ)
 - DotFastLZ can be used in C# projects and Unity3D, and it's great for compressing small, repetitive data.
 
-## Usage: DotFastLZ.Compression
+## Usage: DotFastLZ.Compression ##
 ```csharp
 for (int level = 1; level <= 2; ++level)
 {
@@ -31,7 +33,7 @@ for (int level = 1; level <= 2; ++level)
 }
 ```
 
-## Usage: DotFastLZ.Packaging.Tools
+## Usage: DotFastLZ.Packaging.Tools ##
 ```shell
 $ 6pack --help
 
