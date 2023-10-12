@@ -33,6 +33,16 @@ for (int level = 1; level <= 2; ++level)
 }
 ```
 
+## Usage: DotFastLZ.Compression.Packaging ##
+```csharp
+const string targetFileName = "soruce.txt";
+string packagingFileName = targetFileName + ".fastlz";
+
+// pack/unpack
+SixPack.PackFile(2, targetFileName, packagingFileName, Console.Write);
+SixPack.UnpackFile(packagingFileName, Console.Write);
+```
+
 ## Usage: DotFastLZ.Packaging.Tools ##
 ```shell
 $ 6pack --help
