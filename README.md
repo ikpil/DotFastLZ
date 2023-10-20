@@ -61,10 +61,6 @@ Options:
   -mem  check in-memory compression speed
 ```
 
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Code style](https://github.com/ariya/fastlz/workflows/Code%20style/badge.svg)](https://github.com/ariya/fastlz/actions)
-[![Address Sanitizer](https://github.com/ariya/fastlz/workflows/Address%20Sanitizer/badge.svg)](https://github.com/ariya/fastlz/actions)
-
 ## Overview
 
 FastLZ (MIT license) is an ANSI C/C90 implementation of [Lempel-Ziv 77 algorithm](https://en.wikipedia.org/wiki/LZ77_and_LZ78#LZ77) (LZ77) of lossless data compression. It is suitable to compress series of text/paragraphs, sequences of raw pixel data, or any other blocks of data with lots of repetition. It is not intended to be used on images, videos, and other formats of data typically already in an optimal compressed form.
