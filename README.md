@@ -62,9 +62,15 @@ Options:
 ```
 
 ## Usage: DotFastLZ.Benchmark ##
+
 ```
 $ dotnet run -c Release
 ```
+
+### System
+- CPU : AMD Ryzen 5 3600
+- RAM : 64GB
+
 
 ### Benchmark : compression canterbury/alice29.txt
 
