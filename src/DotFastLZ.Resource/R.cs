@@ -41,7 +41,7 @@ public static class R
         new SourceZip("enwik8.zip", "enwik")
     );
 
-    public static readonly ImmutableArray<string> TestFiles = ImmutableArray.Create(
+    public static readonly ImmutableArray<string> SourceFiles = ImmutableArray.Create(
         "canterbury/alice29.txt",
         "canterbury/asyoulik.txt",
         "canterbury/cp.html",
@@ -72,7 +72,7 @@ public static class R
     public static byte[] ToBytes(string filename)
     {
         var filepath = Find(filename);
-        using var fs = new FileStream(filepath, FileMode.Open, FileAccess.Read);
+        using var fs = new FileStream(filepath, FileMode.Open, FileAccess.Read, FileShare.Read);
         byte[] buffer = new byte[fs.Length];
         fs.Read(buffer, 0, buffer.Length);
 
