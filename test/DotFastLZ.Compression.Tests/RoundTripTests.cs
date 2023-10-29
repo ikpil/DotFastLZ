@@ -51,7 +51,7 @@ public class RoundTripTests
     public void TestRefDecompressorLevel1()
     {
         Console.WriteLine("Test reference decompressor for Level 1");
-        foreach (var name in R.TestFiles)
+        foreach (var name in R.SourceFiles)
         {
             var filename = R.Find(Path.Combine(R.Prefix, name));
             bool result = TestHelper.test_ref_decompressor_level1(name, filename);
@@ -63,7 +63,7 @@ public class RoundTripTests
     public void TestRefDecompressorLevel2()
     {
         Console.WriteLine("Test reference decompressor for Level 2");
-        foreach (var name in R.TestFiles)
+        foreach (var name in R.SourceFiles)
         {
             var filename = R.Find(Path.Combine(R.Prefix, name));
             bool result = TestHelper.test_ref_decompressor_level2(name, filename);
@@ -76,7 +76,7 @@ public class RoundTripTests
     public void TestRoundtripLevel1()
     {
         Console.WriteLine("Test round-trip for Level 1");
-        foreach (var name in R.TestFiles)
+        foreach (var name in R.SourceFiles)
         {
             var filename = R.Find(Path.Combine(R.Prefix, name));
             bool result = TestHelper.test_roundtrip_level1(name, filename);
@@ -88,7 +88,7 @@ public class RoundTripTests
     public void TestRoundtripLevel2()
     {
         Console.WriteLine("Test round-trip for Level 2");
-        foreach (var name in R.TestFiles)
+        foreach (var name in R.SourceFiles)
         {
             var filename = R.Find(Path.Combine(R.Prefix, name));
             var result = TestHelper.test_roundtrip_level2(name, filename);
