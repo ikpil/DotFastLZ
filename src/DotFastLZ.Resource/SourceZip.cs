@@ -23,7 +23,7 @@
 
 using System.IO;
 
-namespace DotFastLZ.Compression.Tests.Fixtures;
+namespace DotFastLZ.Resource;
 
 public class SourceZip
 {
@@ -38,7 +38,7 @@ public class SourceZip
 
     public void Extract(string extractRootPath)
     {
-        var zipFilePath = ResourceHelper.Find(_fileName);
+        var zipFilePath = R.Find(_fileName);
         var directoryName = Path.GetDirectoryName(zipFilePath);
         if (null == directoryName)
         {
@@ -46,6 +46,6 @@ public class SourceZip
         }
 
         var extractPath = Path.Combine(directoryName, extractRootPath, _extractPath);
-        ResourceHelper.ExtractZipFile(zipFilePath, extractPath);
+        R.ExtractZipFile(zipFilePath, extractPath);
     }
 }
