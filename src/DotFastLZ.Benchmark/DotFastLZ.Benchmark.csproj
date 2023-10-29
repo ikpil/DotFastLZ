@@ -3,7 +3,19 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net7.0</TargetFramework>
+    <PackageId>DotFastLZ.Benchmark</PackageId>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <Authors>ikpil</Authors>
+    <Description>DotFastLZ - a port of FastLZ, Small and portable byte-aligned LZ77 compression for C#</Description>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/ikpil/DotFastLZ</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ikpil/DotFastLZ</RepositoryUrl>
+    <PackageTags>compression fastlz unity3d lz77</PackageTags>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="../../README.md" Pack="true" PackagePath="\"/>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="K4os.Compression.LZ4" Version="1.3.6" />
