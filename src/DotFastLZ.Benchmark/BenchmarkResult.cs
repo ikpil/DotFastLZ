@@ -7,7 +7,7 @@ public class BenchmarkResult
 {
     public string Name;
     public int Times;
-    public Stopwatch Watch;
+    public Stopwatch ElapsedWatch;
     public long SourceBytes;
     public long DestBytes;
 
@@ -29,7 +29,7 @@ public class BenchmarkResult
 
     public double ComputeSpeed()
     {
-        return CalculateCompressionSpeed(DestBytes, Watch.Elapsed);
+        return CalculateCompressionSpeed(DestBytes, ElapsedWatch.Elapsed);
     }
 
     public string ToSpeedString()
