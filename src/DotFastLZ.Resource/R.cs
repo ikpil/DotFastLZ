@@ -28,9 +28,9 @@ using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace DotFastLZ.Compression.Tests.Fixtures;
+namespace DotFastLZ.Resource;
 
-public static class ResourceHelper
+public static class R
 {
     public const string Prefix = "compression-corpus";
 
@@ -94,7 +94,7 @@ public static class ResourceHelper
 
         return Path.GetFullPath(pathName);
     }
-    
+
     public static int ExtractZipFile(string zipFilePath, string destDir)
     {
         int count = 0;
@@ -102,7 +102,7 @@ public static class ResourceHelper
         {
             if (string.IsNullOrEmpty(destDir))
                 destDir = string.Empty;
-            
+
             if (!Directory.Exists(destDir))
             {
                 Directory.CreateDirectory(destDir);
@@ -112,9 +112,10 @@ public static class ResourceHelper
             foreach (ZipArchiveEntry entry in archive.Entries)
             {
                 // https://cwe.mitre.org/data/definitions/22.html
-                string destFileName = Path.Combine(destDir, entry.FullName);
                 string fullDestDirPath = Path.GetFullPath(destDir + Path.DirectorySeparatorChar);
-                if (!destFileName.StartsWith(fullDestDirPath)) {
+                string destFileName = Path.GetFullPath(Path.Combine(destDir, entry.FullName));
+                if (!destFileName.StartsWith(fullDestDirPath))
+                {
                     throw new InvalidOperationException($"Entry is outside the target dir: {destFileName}");
                 }
 
@@ -203,7 +204,7 @@ public static class ResourceHelper
         }
     }
 
-    public static void RemoveAll()
+    public static void DeleteAll()
     {
         var path = Find(Prefix);
         if (!string.IsNullOrEmpty(path))

@@ -24,6 +24,7 @@
 
 using System;
 using System.IO;
+using DotFastLZ.Resource;
 
 namespace DotFastLZ.Compression.Tests.Fixtures;
 
@@ -86,7 +87,7 @@ public static class TestHelper
         RefImpl.REF_Level1_decompress(compressed_buffer, compressed_size, uncompressed_buffer);
 
         Console.WriteLine("Comparing. Please wait...");
-        long result = ResourceHelper.Compare(file_name, file_buffer, uncompressed_buffer, file_size);
+        long result = R.Compare(file_name, file_buffer, uncompressed_buffer, file_size);
         if (0 <= result)
         {
             Console.WriteLine($"failed to compare - {name} index({result})");
@@ -153,7 +154,7 @@ public static class TestHelper
         RefImpl.REF_Level2_decompress(compressed_buffer, compressed_size, uncompressed_buffer);
 
         Console.WriteLine("Comparing. Please wait...");
-        long result = ResourceHelper.Compare(file_name, file_buffer, uncompressed_buffer, file_size);
+        long result = R.Compare(file_name, file_buffer, uncompressed_buffer, file_size);
         if (0 <= result)
         {
             Console.WriteLine($"failed to compare - {name} index({result})");
@@ -220,7 +221,7 @@ public static class TestHelper
         FastLZ.DecompressLevel1(compressed_buffer, 0, compressed_size, uncompressed_buffer, 0, uncompressed_buffer.Length);
 
         Console.WriteLine("Comparing. Please wait...");
-        long result = ResourceHelper.Compare(file_name, file_buffer, uncompressed_buffer, file_size);
+        long result = R.Compare(file_name, file_buffer, uncompressed_buffer, file_size);
         if (0 <= result)
         {
             Console.WriteLine($"failed to compare - {name} index({result})");
@@ -288,7 +289,7 @@ public static class TestHelper
         FastLZ.DecompressLevel2(compressed_buffer, 0, compressed_size, uncompressed_buffer, 0, uncompressed_buffer.Length);
 
         Console.WriteLine("Comparing. Please wait...");
-        long result = ResourceHelper.Compare(file_name, file_buffer, uncompressed_buffer, file_size);
+        long result = R.Compare(file_name, file_buffer, uncompressed_buffer, file_size);
         if (0 <= result)
         {
             Console.WriteLine($"failed to compare - {name} index({result})");

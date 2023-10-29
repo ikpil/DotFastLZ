@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\DotFastLZ.Compression\DotFastLZ.Compression.csproj" />
+    <ProjectReference Include="..\..\src\DotFastLZ.Resource\DotFastLZ.Resource.csproj" />
   </ItemGroup>
 
 </Project>

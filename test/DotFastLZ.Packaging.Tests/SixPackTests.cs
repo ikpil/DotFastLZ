@@ -5,6 +5,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using DotFastLZ.Compression.Tests.Fixtures;
+using DotFastLZ.Resource;
 using NUnit.Framework;
 
 namespace DotFastLZ.Packaging.Tests;
@@ -53,25 +54,25 @@ public class SixPackTests
         File.Delete(fastlz1);
         File.Delete(fastlz2);
 
-        ResourceHelper.GenerateFile(filename, 1024 * 1024);
+        R.GenerateFile(filename, 1024 * 1024);
 
         // pack
         SixPack.PackFile(1, filename, fastlz1, Console.Write);
         SixPack.PackFile(2, filename, fastlz2, Console.Write);
 
-        var sourceMd5 = ResourceHelper.ComputeMD5(filename);
+        var sourceMd5 = R.ComputeMD5(filename);
         File.Delete(filename);
         Assert.That(sourceMd5, Is.EqualTo("90e4a4b78ebf7f88b02b0054ab0d6daa"));
         Assert.That(File.Exists(filename), Is.EqualTo(false));
 
         // checksum
-        Assert.That(ResourceHelper.ComputeMD5(fastlz1), Is.EqualTo("6ca821bdf187f12bf23552133dfa99a1"));
-        Assert.That(ResourceHelper.ComputeMD5(fastlz2), Is.EqualTo("c70d787ea842eba36b7d1479b94c6740"));
+        Assert.That(R.ComputeMD5(fastlz1), Is.EqualTo("6ca821bdf187f12bf23552133dfa99a1"));
+        Assert.That(R.ComputeMD5(fastlz2), Is.EqualTo("c70d787ea842eba36b7d1479b94c6740"));
 
         // unpack level1
         {
             int status1 = SixPack.UnpackFile(fastlz1, Console.Write);
-            var decompress1Md5 = ResourceHelper.ComputeMD5(filename);
+            var decompress1Md5 = R.ComputeMD5(filename);
             File.Delete(filename);
             File.Delete(fastlz1);
 
@@ -83,7 +84,7 @@ public class SixPackTests
         // unpack level2
         {
             int status2 = SixPack.UnpackFile(fastlz2, Console.Write);
-            var decompress2Md5 = ResourceHelper.ComputeMD5(filename);
+            var decompress2Md5 = R.ComputeMD5(filename);
 
             File.Delete(filename);
             File.Delete(fastlz2);
@@ -100,7 +101,7 @@ public class SixPackTests
         const string benchmarkFileName = "benchmark.txt";
         File.Delete(benchmarkFileName);
 
-        ResourceHelper.GenerateFile(benchmarkFileName, 1024 * 1024 * 8);
+        R.GenerateFile(benchmarkFileName, 1024 * 1024 * 8);
 
         int status1 = SixPack.BenchmarkSpeed(1, benchmarkFileName, Console.Write);
         int status2 = SixPack.BenchmarkSpeed(2, benchmarkFileName, Console.Write);

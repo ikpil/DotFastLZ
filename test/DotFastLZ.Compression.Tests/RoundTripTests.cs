@@ -25,6 +25,7 @@
 using System;
 using System.IO;
 using DotFastLZ.Compression.Tests.Fixtures;
+using DotFastLZ.Resource;
 using NUnit.Framework;
 
 namespace DotFastLZ.Compression.Tests;
@@ -36,23 +37,23 @@ public class RoundTripTests
     [OneTimeSetUp]
     public void OnSetUp()
     {
-        ResourceHelper.ExtractAll();
+        R.ExtractAll();
     }
 
     [OneTimeTearDown]
     public void OnTearDown()
     {
         // remove
-        ResourceHelper.RemoveAll();
+        R.DeleteAll();
     }
 
     [Test]
     public void TestRefDecompressorLevel1()
     {
         Console.WriteLine("Test reference decompressor for Level 1");
-        foreach (var name in ResourceHelper.TestFiles)
+        foreach (var name in R.TestFiles)
         {
-            var filename = ResourceHelper.Find(Path.Combine(ResourceHelper.Prefix, name));
+            var filename = R.Find(Path.Combine(R.Prefix, name));
             bool result = TestHelper.test_ref_decompressor_level1(name, filename);
             Assert.That(result, Is.EqualTo(true), $"test_ref_decompressor_level1({name}, {filename})");
         }
@@ -62,9 +63,9 @@ public class RoundTripTests
     public void TestRefDecompressorLevel2()
     {
         Console.WriteLine("Test reference decompressor for Level 2");
-        foreach (var name in ResourceHelper.TestFiles)
+        foreach (var name in R.TestFiles)
         {
-            var filename = ResourceHelper.Find(Path.Combine(ResourceHelper.Prefix, name));
+            var filename = R.Find(Path.Combine(R.Prefix, name));
             bool result = TestHelper.test_ref_decompressor_level2(name, filename);
             Assert.That(result, Is.EqualTo(true), $"test_ref_decompressor_level2({name}, {filename})");
         }
@@ -75,9 +76,9 @@ public class RoundTripTests
     public void TestRoundtripLevel1()
     {
         Console.WriteLine("Test round-trip for Level 1");
-        foreach (var name in ResourceHelper.TestFiles)
+        foreach (var name in R.TestFiles)
         {
-            var filename = ResourceHelper.Find(Path.Combine(ResourceHelper.Prefix, name));
+            var filename = R.Find(Path.Combine(R.Prefix, name));
             bool result = TestHelper.test_roundtrip_level1(name, filename);
             Assert.That(result, Is.EqualTo(true), $"test_roundtrip_level1({name}, {filename})");
         }
@@ -87,9 +88,9 @@ public class RoundTripTests
     public void TestRoundtripLevel2()
     {
         Console.WriteLine("Test round-trip for Level 2");
-        foreach (var name in ResourceHelper.TestFiles)
+        foreach (var name in R.TestFiles)
         {
-            var filename = ResourceHelper.Find(Path.Combine(ResourceHelper.Prefix, name));
+            var filename = R.Find(Path.Combine(R.Prefix, name));
             var result = TestHelper.test_roundtrip_level2(name, filename);
             Assert.That(result, Is.EqualTo(true), $"test_roundtrip_level2({name}, {filename})");
         }

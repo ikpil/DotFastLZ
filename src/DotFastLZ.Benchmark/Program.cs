@@ -1,9 +1,30 @@
 ﻿using System;
+using DotFastLZ.Resource;
 
-public class Program
+namespace DotFastLZ.Benchmark;
+
+public static class Program
 {
     public static void Main(string[] args)
     {
-        Console.WriteLine("Hello, World!");
+        try
+        {
+            R.ExtractAll();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+        finally
+        {
+            R.DeleteAll();
+        }
+
+    }
+
+    public static BenchmarkResult Benchmark(string file, int count)
+    {
+        return null;
     }
 }
