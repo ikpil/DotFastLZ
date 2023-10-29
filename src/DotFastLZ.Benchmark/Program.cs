@@ -201,7 +201,7 @@ public static class Program
         widths[2] += 1;
 
         Console.WriteLine();
-        Console.WriteLine($"## {headline}");
+        Console.WriteLine($"### {headline} ###");
         Console.WriteLine();
 
         // 표 출력
