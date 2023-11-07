@@ -64,6 +64,7 @@ Options:
 ## Usage: DotFastLZ.Benchmark ##
 
 ```
+$ cd src/DotFastLZ.Benchmark
 $ dotnet run -c Release
 ```
 
