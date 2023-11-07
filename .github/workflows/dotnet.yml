@@ -8,6 +8,13 @@ on:
       - '**.cs'
       - '**.csproj'
       - '**.sln'
+  pull_request:
+    branches:
+      - 'pr/**'
+    paths:
+      - '**.cs'
+      - '**.csproj'
+      - '**.sln'
 
 jobs:
   build-and-test:
