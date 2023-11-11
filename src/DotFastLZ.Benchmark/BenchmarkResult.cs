@@ -1,52 +1,29 @@
-﻿using System;
-using System.Diagnostics;
-
-namespace DotFastLZ.Benchmark;
+﻿namespace DotFastLZ.Benchmark;
 
 public class BenchmarkResult
 {
+    public const int CollSize = 4;
     public string Name;
     public int Times;
-    public Stopwatch ElapsedWatch;
-    public long SourceBytes;
-    public long DestBytes;
-
-    public static double CalculateCompressionSpeed(long size, TimeSpan timeSpan)
-    {
-        // MB/s
-        return (double)size / (1024 * 1024) / timeSpan.TotalSeconds;
-    }
-
-    public double ComputeRate()
-    {
-        return DestBytes / (double)SourceBytes * 100;
-    }
-
-    public string ToRateString()
-    {
-        return $"{ComputeRate():F2}";
-    }
-
-    public double ComputeSpeed()
-    {
-        return CalculateCompressionSpeed(DestBytes, ElapsedWatch.Elapsed);
-    }
-
-    public string ToSpeedString()
-    {
-        return $"{ComputeSpeed():F2}";
-    }
+    public BenchmarkSpeed Compression;
+    public BenchmarkSpeed Decompression;
 
     public override string ToString()
     {
         var result = "";
         result += $"{Name}\n";
         result += $"  - times: {Times}\n";
-        result += $"  - source bytes: {SourceBytes / Times}\n";
-        result += $"  - compression bytes: {DestBytes / Times}\n";
-        result += $"  - compression rate: {ComputeRate():F2}%\n";
-        result += $"  - compression speed: {ComputeSpeed():F2} MB/s\n";
+        result += $"  - source bytes: {Compression.InputBytes / Times}\n";
+        result += $"  - compression bytes: {Compression.OutputBytes / Times}\n";
+        result += $"  - compression rate: {Compression.ComputeRate():F2}%\n";
+        result += $"  - compression speed: {Compression.ComputeSpeed():F2} MB/s\n";
+        result += $"  - decompression speed: {Decompression.ComputeSpeed():F2} MB/s\n";
 
         return result;
+    }
+
+    public double ComputeTotalSpeed()
+    {
+        return Compression.ComputeSpeed() + Decompression.ComputeSpeed();
     }
 }

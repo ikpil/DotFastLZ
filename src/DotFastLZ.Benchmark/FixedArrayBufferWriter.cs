@@ -6,9 +6,6 @@ namespace DotFastLZ.Benchmark;
 
 sealed class FixedArrayBufferWriter<T> : IBufferWriter<T>
 {
-    private const int ArrayMaxLength = 0x7FFFFFC7;
-    private const int DefaultInitialBufferSize = 256;
-
     private readonly T[] _buffer;
     private int _index;
 
