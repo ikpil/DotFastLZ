@@ -3,7 +3,8 @@ name: .NET
 on:
   push:
     branches: 
-      - main
+      - 'main'
+      - 'pr/**'
     paths:
       - '**.cs'
       - '**.csproj'
@@ -18,7 +19,7 @@ on:
 
 jobs:
   build-and-test:
-    name: build-and-test-${{matrix.os}}
+    name: test-${{matrix.os}}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
