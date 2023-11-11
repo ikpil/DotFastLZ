@@ -1,11 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Collections.Generic;
 using DotFastLZ.Compression;
 using DotFastLZ.Resource;
+
 using K4os.Compression.LZ4;
 
 namespace DotFastLZ.Benchmark;
@@ -17,6 +17,8 @@ public static class Program
         try
         {
             R.ExtractAll();
+
+            var benchmarks = new List<IBenchmark>();
 
             var totalResults = new List<BenchmarkResult>();
             foreach (var file in R.SourceFiles)
