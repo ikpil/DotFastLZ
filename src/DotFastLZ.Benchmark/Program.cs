@@ -20,8 +20,8 @@ public static class Program
             foreach (var file in R.SourceFiles)
             {
                 var results = BenchmarkFile(file);
-                Print($"Benchmark : compression {file}", results.Select(x => x.Item1).ToList());
-                Print($"Benchmark : decompression {file}", results.Select(x => x.Item2).ToList());
+                Print($"Benchmark : compression {file}", results);
+                //break;
             }
         }
         catch (Exception e)
@@ -35,9 +35,9 @@ public static class Program
         }
     }
 
-    private static List<Tuple<BenchmarkResult, BenchmarkResult>> BenchmarkFile(string file)
+    private static List<BenchmarkResult> BenchmarkFile(string file)
     {
-        var results = new List<Tuple<BenchmarkResult, BenchmarkResult>>();
+        var results = new List<BenchmarkResult>();
 
         var filepath = R.Find(Path.Combine(R.Prefix, file));
         var srcBytes = R.ToBytes(filepath);
@@ -77,41 +77,41 @@ public static class Program
         return results;
     }
 
-    private static Tuple<BenchmarkResult, BenchmarkResult> Benchmark(string name, byte[] srcBytes, byte[] dstBytes, Func<byte[], byte[], long> compress, Func<byte[], long, byte[], long> decompress)
+    private static BenchmarkResult Benchmark(string name, byte[] srcBytes, byte[] dstBytes, Func<byte[], byte[], long> compress, Func<byte[], long, byte[], long> decompress)
     {
-        var compressedResult = new BenchmarkResult();
-        compressedResult.Name = name;
-        compressedResult.ElapsedWatch = new Stopwatch();
-        compressedResult.ElapsedWatch.Start();
+        long compressionSourceByteLength = srcBytes.Length;
+
+        var result = new BenchmarkResult();
+        result.Name = name;
+        result.Compression.ElapsedWatch = new Stopwatch();
+        result.Compression.ElapsedWatch.Start();
         for (int i = 0; i < 5; ++i)
         {
             long size = compress.Invoke(srcBytes, dstBytes);
-            compressedResult.SourceBytes += srcBytes.Length;
-            compressedResult.DestBytes += size;
-            compressedResult.Times += 1;
+            result.Compression.InputBytes += compressionSourceByteLength;
+            result.Compression.OutputBytes += size;
+            result.Times += 1;
         }
 
-        compressedResult.ElapsedWatch.Stop();
+        result.Compression.ElapsedWatch.Stop();
 
+        var decompInputLength = result.Compression.OutputBytes / result.Times;
         //dstBytes.AsSpan(0, (int)(compressedResult.DestBytes / compressedResult.Times)).CopyTo(srcBytes);
 
-
-        var decompressedResult = new BenchmarkResult();
-        decompressedResult.Name = name;
-        decompressedResult.ElapsedWatch = new Stopwatch();
-        decompressedResult.ElapsedWatch.Start();
+        result.Decompression.ElapsedWatch = new Stopwatch();
+        result.Decompression.ElapsedWatch.Start();
         for (int i = 0; i < 5; ++i)
         {
-            long size = decompress.Invoke(dstBytes, compressedResult.DestBytes / compressedResult.Times, srcBytes);
-            decompressedResult.SourceBytes += size;
-            decompressedResult.DestBytes += compressedResult.DestBytes / compressedResult.Times;
-            decompressedResult.Times += 1;
+            long size = decompress.Invoke(dstBytes, decompInputLength, srcBytes);
+            result.Decompression.InputBytes += decompInputLength;
+            result.Decompression.OutputBytes += size;
+            result.Times += 1;
         }
 
-        decompressedResult.ElapsedWatch.Stop();
+        result.Decompression.ElapsedWatch.Stop();
 
         //Console.WriteLine(result.ToString());
-        return Tuple.Create(compressedResult, decompressedResult);
+        return result;
     }
 
 
@@ -185,42 +185,57 @@ public static class Program
 
     private static void Print(string headline, List<BenchmarkResult> results)
     {
-        var sorted = results.OrderByDescending(x => x.ComputeSpeed()).ToList();
+        var rows = results
+            .OrderByDescending(x => x.ComputeTotalSpeed())
+            .ToList();
+
 
         // 각 열의 최대 길이를 찾기 위한 작업
-        int[] widths = new int[3];
-        for (int i = 0; i < sorted.Count; i++)
+        int[] widths = new int[BenchmarkResult.CollSize];
+        for (int i = 0; i < rows.Count; i++)
         {
-            widths[0] = Math.Max(sorted[i].Name.Length, widths[0]);
-            widths[1] = Math.Max(sorted[i].ToSpeedString().Length, widths[2]);
-            widths[2] = Math.Max(sorted[i].ToRateString().Length, widths[1]);
+            widths[0] = Math.Max(rows[i].Name.Length, widths[0]);
+            widths[1] = Math.Max(rows[i].Compression.ToSpeedString().Length, widths[1]);
+            widths[2] = Math.Max(rows[i].Decompression.ToSpeedString().Length, widths[2]);
+            widths[3] = Math.Max(rows[i].Compression.ToRateString().Length, widths[3]);
         }
 
-        widths[0] += 1;
-        widths[1] += 1;
-        widths[2] += 1;
+        var headName = "Name";
+        var headCompMbs = "Comp. MB/s";
+        var headDecompMbs = "Decomp. MB/s";
+        var headRate = "Rate";
+        
+        widths[0] = Math.Max(widths[0], headName.Length) + 1;
+        widths[1] = Math.Max(widths[1], headCompMbs.Length) + 1;
+        widths[2] = Math.Max(widths[2], headDecompMbs.Length) + 1;
+        widths[3] = Math.Max(widths[3], headRate.Length) + 1;
 
         Console.WriteLine();
         Console.WriteLine($"### {headline} ###");
         Console.WriteLine();
 
+
+
         // 표 출력
         Console.WriteLine("| " +
-                          "Name" + new string(' ', widths[0] - 4) + "| " +
-                          "MB/s" + new string(' ', widths[1] - 4) + "| " +
-                          "Rate" + new string(' ', widths[2] - 4) + "|");
+                          headName + new string(' ', widths[0] - headName.Length) + "| " +
+                          headCompMbs + new string(' ', widths[1] - headCompMbs.Length) + "| " +
+                          headDecompMbs + new string(' ', widths[2] - headDecompMbs.Length) + "| " +
+                          headRate + new string(' ', widths[3] - headRate.Length) + "|");
         Console.WriteLine("|-" +
                           new string('-', widths[0]) + "|-" +
                           new string('-', widths[1]) + "|-" +
-                          new string('-', widths[2]) + "|");
+                          new string('-', widths[2]) + "|-" +
+                          new string('-', widths[3]) + "|");
 
-        foreach (var row in sorted)
+        foreach (var row in rows)
         {
             Console.WriteLine(
                 "| " +
                 row.Name.PadRight(widths[0]) + "| " +
-                row.ToSpeedString().PadRight(widths[1]) + "| " +
-                row.ToRateString().PadRight(widths[2]) + "|"
+                row.Compression.ToSpeedString().PadRight(widths[1]) + "| " +
+                row.Decompression.ToSpeedString().PadRight(widths[2]) + "| " +
+                row.Compression.ToRateString().PadRight(widths[3]) + "|"
             );
         }
     }
