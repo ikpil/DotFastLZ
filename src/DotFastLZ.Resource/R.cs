@@ -36,9 +36,7 @@ public static class R
 
     // ready zip files
     public static readonly ImmutableArray<SourceZip> SourceZipFiles = ImmutableArray.Create(
-        new SourceZip("canterburycorpus.zip", "canterbury"),
-        new SourceZip("silesia.zip", "silesia"),
-        new SourceZip("enwik8.zip", "enwik")
+        new SourceZip("enwik/enwik8.zip", "enwik/enwik8.txt")
     );
 
     public static readonly ImmutableArray<string> SourceFiles = ImmutableArray.Create(
@@ -65,7 +63,7 @@ public static class R
         "silesia/webster",
         "silesia/x-ray",
         "silesia/xml",
-        "enwik/enwik8"
+        "enwik/enwik8.txt"
     );
 
 
@@ -79,20 +77,22 @@ public static class R
         return buffer;
     }
 
-    public static string Find(string pathName)
+    public static string Find(string path)
     {
-        string path = Path.Combine("resources", pathName);
+        string rpath = Path.Combine(Prefix, path);
+        //Console.WriteLine(rpath);
         for (int i = 0; i < 10; ++i)
         {
-            if (File.Exists(path) || Directory.Exists(path))
+            if (File.Exists(rpath) || Directory.Exists(rpath))
             {
-                return Path.GetFullPath(path);
+                return Path.GetFullPath(rpath);
             }
 
-            path = Path.Combine("..", path);
+            rpath = Path.Combine("..", rpath);
+            //Console.WriteLine($"{i} - {rpath}");
         }
 
-        return Path.GetFullPath(pathName);
+        return Path.GetFullPath(rpath);
     }
 
     public static int ExtractZipFile(string zipFilePath, string destDir)
@@ -200,16 +200,15 @@ public static class R
         // extract source files
         foreach (var sourceZip in SourceZipFiles)
         {
-            sourceZip.Extract(Prefix);
+            sourceZip.Extract("");
         }
     }
 
     public static void DeleteAll()
     {
-        var path = Find(Prefix);
-        if (!string.IsNullOrEmpty(path))
+        foreach (var sourceZip in SourceZipFiles)
         {
-            Directory.Delete(path, true);
+            sourceZip.Delete();
         }
     }
 }

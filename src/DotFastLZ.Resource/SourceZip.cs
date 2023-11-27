@@ -27,25 +27,38 @@ namespace DotFastLZ.Resource;
 
 public class SourceZip
 {
-    private readonly string _fileName;
-    private readonly string _extractPath;
+    private readonly string _path;
+    private readonly string _deletablePath;
 
-    public SourceZip(string fileName, string extractPath)
+    public SourceZip(string path, string deletablePath)
     {
-        _fileName = fileName;
-        _extractPath = extractPath;
+        _path = path;
+        _deletablePath = deletablePath;
     }
 
     public void Extract(string extractRootPath)
     {
-        var zipFilePath = R.Find(_fileName);
+        var zipFilePath = R.Find(_path);
         var directoryName = Path.GetDirectoryName(zipFilePath);
         if (null == directoryName)
         {
             throw new DirectoryNotFoundException($"not found directoryName - {zipFilePath}");
         }
 
-        var extractPath = Path.Combine(directoryName, extractRootPath, _extractPath);
+        var extractPath = Path.Combine(directoryName, extractRootPath);
         R.ExtractZipFile(zipFilePath, extractPath);
+    }
+
+    public void Delete()
+    {
+        var deletePath = R.Find(_deletablePath);
+        if (Directory.Exists(deletePath))
+        {
+            Directory.Delete(deletePath, true);
+        }
+        else if (File.Exists(deletePath))
+        {
+            File.Delete(deletePath);
+        }
     }
 }
