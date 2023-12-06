@@ -9,7 +9,7 @@
 
 - DotFastLZ is C# fastlz
 - DotFastLZ is a port of [ariya/FastLZ](https://github.com/ariya/FastLZ)
-- DotFastLZ can be used in C# projects and Unity3D, and it's great for compressing small, repetitive data.
+- DotFastLZ can be used in Unity3D, C# server, network packet, game data
 
 ## Usage: DotFastLZ.Compression
 ```csharp
