@@ -5,12 +5,13 @@
 ![Repo Size](https://img.shields.io/github/repo-size/ikpil/DotFastLZ.svg?colorB=lightgray)
 ![Languages](https://img.shields.io/github/languages/top/ikpil/DotFastLZ)
 
-## Introduction ##
+## Introduction
 
-- DotFastLZ is a C# port of FastLZ [ariya/FastLZ](https://github.com/ariya/FastLZ)
+- DotFastLZ is C# fastlz
+- DotFastLZ is a port of [ariya/FastLZ](https://github.com/ariya/FastLZ)
 - DotFastLZ can be used in C# projects and Unity3D, and it's great for compressing small, repetitive data.
 
-## Usage: DotFastLZ.Compression ##
+## Usage: DotFastLZ.Compression
 ```csharp
 for (int level = 1; level <= 2; ++level)
 {
