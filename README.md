@@ -2,8 +2,10 @@
 [![.NET](https://github.com/ikpil/DotFastLZ/actions/workflows/dotnet.yml/badge.svg)](https://github.com/ikpil/DotFastLZ/actions/workflows/dotnet.yml)
 [![CodeQL](https://github.com/ikpil/DotFastLZ/actions/workflows/codeql.yml/badge.svg)](https://github.com/ikpil/DotFastLZ/actions/workflows/codeql.yml)
 [![NuGet Version and Downloads count](https://buildstats.info/nuget/DotFastLZ.Compression)](https://www.nuget.org/packages/DotFastLZ.Compression)
-![Repo Size](https://img.shields.io/github/repo-size/ikpil/DotFastLZ.svg?colorB=lightgray)
+![GitHub repo size](https://img.shields.io/github/repo-size/ikpil/DotFastLZ)
 ![Languages](https://img.shields.io/github/languages/top/ikpil/DotFastLZ)
+[![Visitors](https://api.visitorbadge.io/api/daily?path=https%3A%2F%2Fgithub.com%2Fikpil%2FDotFastLZ&countColor=%23263759&style=flat-square)](https://visitorbadge.io/status?path=https%3A%2F%2Fgithub.com%2Fikpil%2FDotFastLZ)
+[![GitHub Sponsors](https://img.shields.io/github/sponsors/ikpil?style=flat-square&logo=GitHub-Sponsors&link=https%3A%2F%2Fgithub.com%2Fsponsors%2Fikpil)](https://github.com/sponsors/ikpil)
 
 ## Introduction
 
