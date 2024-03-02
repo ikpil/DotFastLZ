@@ -56,7 +56,7 @@ SixPack.UnpackFile(packagingFileName, Console.Write);
 ## Usage: 6pack
 ```shell
 $ dotnet tool install --global 6pack
-$ dotnet tool 6pack --help
+$ 6pack --help
 
 6pack: high-speed file compression tool
 Copyright (C) Ariya Hidayat, Choi Ikpil(ikpil@naver.com)

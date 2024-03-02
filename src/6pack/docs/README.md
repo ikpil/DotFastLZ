@@ -1,5 +1,6 @@
 ## Usage: 6pack
 ```shell
+$ dotnet tool install --global 6pack
 $ 6pack --help
 
 6pack: high-speed file compression tool
