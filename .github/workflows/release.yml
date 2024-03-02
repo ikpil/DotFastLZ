@@ -31,7 +31,7 @@ jobs:
         run: dotnet test -c Release --no-build --verbosity normal
 
       - name: publish to local
-        run: dotnet publish src/DotFastLZ.Packaging.Tools -c Release --no-restore --no-self-contained --output working-temp
+        run: dotnet publish src/DotFastLZ.Packaging.Tools -c Release --framework net8.0 --no-restore --no-self-contained --output working-temp
 
       - name: version
         id: version
