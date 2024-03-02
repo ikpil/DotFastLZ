@@ -4,6 +4,8 @@
     <OutputType>Exe</OutputType>
     <TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
     <AssemblyName>6pack</AssemblyName>
+    <ToolCommandName>6pack</ToolCommandName>
+    <PackAsTool>true</PackAsTool>
     <PackageId>DotFastLZ.Packaging.Tools</PackageId>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <Authors>ikpil</Authors>
