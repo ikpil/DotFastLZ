@@ -1,17 +1,27 @@
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![.NET](https://github.com/ikpil/DotFastLZ/actions/workflows/dotnet.yml/badge.svg)](https://github.com/ikpil/DotFastLZ/actions/workflows/dotnet.yml)
-[![CodeQL](https://github.com/ikpil/DotFastLZ/actions/workflows/codeql.yml/badge.svg)](https://github.com/ikpil/DotFastLZ/actions/workflows/codeql.yml)
-[![NuGet Version and Downloads count](https://buildstats.info/nuget/DotFastLZ.Compression)](https://www.nuget.org/packages/DotFastLZ.Compression)
-![GitHub repo size](https://img.shields.io/github/repo-size/ikpil/DotFastLZ)
-![Languages](https://img.shields.io/github/languages/top/ikpil/DotFastLZ)
-[![Visitors](https://api.visitorbadge.io/api/daily?path=https%3A%2F%2Fgithub.com%2Fikpil%2FDotFastLZ&countColor=%23263759&style=flat-square)](https://visitorbadge.io/status?path=https%3A%2F%2Fgithub.com%2Fikpil%2FDotFastLZ)
-[![GitHub Sponsors](https://img.shields.io/github/sponsors/ikpil?style=flat-square&logo=GitHub-Sponsors&link=https%3A%2F%2Fgithub.com%2Fsponsors%2Fikpil)](https://github.com/sponsors/ikpil)
+<h1 align="center">DotFastLZ</h1>
+<p align="center"><i>
+DotFastLZ is C# fastlz, a port of <a href="https://github.com/ariya/FastLZ">ariya/FastLZ</a><br/>
+DotFastLZ can be used in Unity3D, C# server, network packet, game data
+</i></p>
 
-## Introduction
+---
+<p align="center">
+<img alt="![GitHub License]" src="https://img.shields.io/github/license/ikpil/DotFastLZ?style=for-the-badge">
+<img alt="Languages" src="https://img.shields.io/github/languages/top/ikpil/DotFastLZ?style=for-the-badge">
+<img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/ikpil/DotFastLZ?style=for-the-badge">
+<a href="https://github.com/ikpil/DotFastLZ"><img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/ikpil/DotFastLZ?style=for-the-badge&logo=github"></a>
+<a href="https://github.com/ikpil/DotFastLZ/actions/workflows/dotnet.yml"><img alt="GitHub Actions Workflow Status" src="https://img.shields.io/github/actions/workflow/status/ikpil/DotFastLZ/dotnet.yml?style=for-the-badge&logo=github"></a>
+<a href="https://github.com/ikpil/DotFastLZ/actions/workflows/codeql.yml"><img alt="GitHub Actions Workflow Status" src="https://img.shields.io/github/actions/workflow/status/ikpil/DotFastLZ/codeql.yml?style=for-the-badge&logo=github&label=CODEQL"></a>
+<a href="https://github.com/ikpil/DotFastLZ/commits"><img alt="GitHub commit activity" src="https://img.shields.io/github/commit-activity/m/ikpil/DotFastLZ?style=for-the-badge&logo=github"></a>
+<a href="https://github.com/ikpil/DotFastLZ/issues"><img alt="GitHub issues" src="https://img.shields.io/github/issues-raw/ikpil/DotFastLZ?style=for-the-badge&logo=github&color=44cc11"></a>
+<a href="https://github.com/ikpil/DotFastLZ/issues"><img alt="GitHub closed issues" src="https://img.shields.io/github/issues-closed-raw/ikpil/DotFastLZ?style=for-the-badge&logo=github&color=a371f7"></a>
+<a href="https://www.nuget.org/packages/DotFastLZ.Compression"><img alt="NuGet Version" src="https://img.shields.io/nuget/vpre/DotFastLZ.Compression?style=for-the-badge&logo=nuget"></a>
+<a href="https://www.nuget.org/packages/DotFastLZ.Compression"><img alt="NuGet Downloads" src="https://img.shields.io/nuget/dt/DotFastLZ.Compression?style=for-the-badge&logo=nuget"></a>
+<a href="https://visitorbadge.io/status?path=ikpil%2FDotFastLZ"><img alt="Visitors" src="https://api.visitorbadge.io/api/daily?path=ikpil%2FDotFastLZ&countColor=%23263759"></a>
+<a href="https://github.com/sponsors/ikpil"><img alt="GitHub Sponsors" src="https://img.shields.io/github/sponsors/ikpil?style=for-the-badge&logo=GitHub-Sponsors&link=https%3A%2F%2Fgithub.com%2Fsponsors%2Fikpil"></a>
+</p>
 
-- DotFastLZ is C# fastlz
-- DotFastLZ is a port of [ariya/FastLZ](https://github.com/ariya/FastLZ)
-- DotFastLZ can be used in Unity3D, C# server, network packet, game data
+---
 
 ## Usage: DotFastLZ.Compression
 ```csharp
@@ -48,7 +58,8 @@ SixPack.UnpackFile(packagingFileName, Console.Write);
 
 ## Usage: DotFastLZ.Packaging.Tools ##
 ```shell
-$ 6pack --help
+$ dotnet tool install --global 6pack
+$ dotnet tool 6pack --help
 
 6pack: high-speed file compression tool
 Copyright (C) Ariya Hidayat, Choi Ikpil(ikpil@naver.com)
