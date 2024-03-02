@@ -31,7 +31,7 @@ jobs:
         run: dotnet test -c Release --no-build --verbosity normal
 
       - name: publish to local
-        run: dotnet publish src/DotFastLZ.Packaging.Tools -c Release --framework net8.0 --no-restore --no-self-contained --output working-temp
+        run: dotnet publish src/6pack -c Release --framework net8.0 --no-restore --no-self-contained --output working-temp
 
       - name: version
         id: version
@@ -46,7 +46,7 @@ jobs:
       - name: Zip
         run: |
           cd working-temp
-          zip -r ../DotFastLZ.Packaging.Tools-${{ steps.version.outputs.version}}.zip ./
+          zip -r ../6pack-${{ steps.version.outputs.version}}.zip ./
         if: success()
 
       - uses: release-drafter/release-drafter@master
@@ -60,7 +60,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            DotFastLZ.Packaging.Tools-${{ steps.version.outputs.version}}.zip
+            6pack-${{ steps.version.outputs.version}}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

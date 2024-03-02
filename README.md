@@ -1,25 +1,22 @@
-<h1 align="center">DotFastLZ</h1>
-<p align="center"><i>
-DotFastLZ is C# fastlz, a port of <a href="https://github.com/ariya/FastLZ">ariya/FastLZ</a><br/>
-DotFastLZ can be used in Unity3D, C# server, network packet, game data
-</i></p>
+# DotFastLZ
+*DotFastLZ is C# fastlz, a port of [ariya/FastLZ](https://github.com/ariya/FastLZ)*  
+*DotFastLZ can be used in Unity3D, C# server, network packet, game data*
 
 ---
-<p align="center">
-<img alt="![GitHub License]" src="https://img.shields.io/github/license/ikpil/DotFastLZ?style=for-the-badge">
-<img alt="Languages" src="https://img.shields.io/github/languages/top/ikpil/DotFastLZ?style=for-the-badge">
-<img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/ikpil/DotFastLZ?style=for-the-badge">
-<a href="https://github.com/ikpil/DotFastLZ"><img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/ikpil/DotFastLZ?style=for-the-badge&logo=github"></a>
-<a href="https://github.com/ikpil/DotFastLZ/actions/workflows/dotnet.yml"><img alt="GitHub Actions Workflow Status" src="https://img.shields.io/github/actions/workflow/status/ikpil/DotFastLZ/dotnet.yml?style=for-the-badge&logo=github"></a>
-<a href="https://github.com/ikpil/DotFastLZ/actions/workflows/codeql.yml"><img alt="GitHub Actions Workflow Status" src="https://img.shields.io/github/actions/workflow/status/ikpil/DotFastLZ/codeql.yml?style=for-the-badge&logo=github&label=CODEQL"></a>
-<a href="https://github.com/ikpil/DotFastLZ/commits"><img alt="GitHub commit activity" src="https://img.shields.io/github/commit-activity/m/ikpil/DotFastLZ?style=for-the-badge&logo=github"></a>
-<a href="https://github.com/ikpil/DotFastLZ/issues"><img alt="GitHub issues" src="https://img.shields.io/github/issues-raw/ikpil/DotFastLZ?style=for-the-badge&logo=github&color=44cc11"></a>
-<a href="https://github.com/ikpil/DotFastLZ/issues"><img alt="GitHub closed issues" src="https://img.shields.io/github/issues-closed-raw/ikpil/DotFastLZ?style=for-the-badge&logo=github&color=a371f7"></a>
-<a href="https://www.nuget.org/packages/DotFastLZ.Compression"><img alt="NuGet Version" src="https://img.shields.io/nuget/vpre/DotFastLZ.Compression?style=for-the-badge&logo=nuget"></a>
-<a href="https://www.nuget.org/packages/DotFastLZ.Compression"><img alt="NuGet Downloads" src="https://img.shields.io/nuget/dt/DotFastLZ.Compression?style=for-the-badge&logo=nuget"></a>
-<a href="https://visitorbadge.io/status?path=ikpil%2FDotFastLZ"><img alt="Visitors" src="https://api.visitorbadge.io/api/daily?path=ikpil%2FDotFastLZ&countColor=%23263759"></a>
-<a href="https://github.com/sponsors/ikpil"><img alt="GitHub Sponsors" src="https://img.shields.io/github/sponsors/ikpil?style=for-the-badge&logo=GitHub-Sponsors&link=https%3A%2F%2Fgithub.com%2Fsponsors%2Fikpil"></a>
-</p>
+
+![GitHub License](https://img.shields.io/github/license/ikpil/DotFastLZ?style=for-the-badge)
+![Languages](https://img.shields.io/github/languages/top/ikpil/DotFastLZ?style=for-the-badge)
+![GitHub repo size](https://img.shields.io/github/repo-size/ikpil/DotFastLZ?style=for-the-badge)
+[![GitHub Repo stars](https://img.shields.io/github/stars/ikpil/DotFastLZ?style=for-the-badge&logo=github)](https://github.com/ikpil/DotFastLZ)
+[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/ikpil/DotFastLZ/dotnet.yml?style=for-the-badge&logo=github)](https://github.com/ikpil/DotFastLZ/actions/workflows/dotnet.yml)
+[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/ikpil/DotFastLZ/codeql.yml?style=for-the-badge&logo=github&label=CODEQL)](https://github.com/ikpil/DotFastLZ/actions/workflows/codeql.yml)
+[![GitHub commit activity](https://img.shields.io/github/commit-activity/m/ikpil/DotFastLZ?style=for-the-badge&logo=github)](https://github.com/ikpil/DotFastLZ/commits)
+[![GitHub issues](https://img.shields.io/github/issues-raw/ikpil/DotFastLZ?style=for-the-badge&logo=github&color=44cc11)](https://github.com/ikpil/DotFastLZ/issues)
+[![GitHub closed issues](https://img.shields.io/github/issues-closed-raw/ikpil/DotFastLZ?style=for-the-badge&logo=github&color=a371f7)](https://github.com/ikpil/DotFastLZ/issues)
+[![NuGet Version](https://img.shields.io/nuget/vpre/DotFastLZ.Compression?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/DotFastLZ.Compression)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/DotFastLZ.Compression?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/DotFastLZ.Compression)
+[![Visitors](https://api.visitorbadge.io/api/daily?path=ikpil%2FDotFastLZ&countColor=%23263759)](https://visitorbadge.io/status?path=ikpil%2FDotFastLZ)
+[![GitHub Sponsors](https://img.shields.io/github/sponsors/ikpil?style=for-the-badge&logo=GitHub-Sponsors&link=https%3A%2F%2Fgithub.com%2Fsponsors%2Fikpil)](https://github.com/sponsors/ikpil)
 
 ---
 
@@ -46,7 +43,7 @@ for (int level = 1; level <= 2; ++level)
 }
 ```
 
-## Usage: DotFastLZ.Compression.Packaging ##
+## Usage: DotFastLZ.Compression.Packaging
 ```csharp
 const string targetFileName = "soruce.txt";
 string packagingFileName = targetFileName + ".fastlz";
@@ -56,7 +53,7 @@ SixPack.PackFile(2, targetFileName, packagingFileName, Console.Write);
 SixPack.UnpackFile(packagingFileName, Console.Write);
 ```
 
-## Usage: DotFastLZ.Packaging.Tools ##
+## Usage: 6pack
 ```shell
 $ dotnet tool install --global 6pack
 $ dotnet tool 6pack --help

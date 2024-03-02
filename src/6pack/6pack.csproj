@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -6,7 +6,7 @@
     <AssemblyName>6pack</AssemblyName>
     <ToolCommandName>6pack</ToolCommandName>
     <PackAsTool>true</PackAsTool>
-    <PackageId>DotFastLZ.Packaging.Tools</PackageId>
+    <PackageId>6pack</PackageId>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <Authors>ikpil</Authors>
     <Description>DotFastLZ - a port of FastLZ, Small and portable byte-aligned LZ77 compression for C#, Unity3D</Description>
