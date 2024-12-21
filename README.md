@@ -14,8 +14,7 @@
 [![GitHub issues](https://img.shields.io/github/issues-raw/ikpil/DotFastLZ?style=for-the-badge&logo=github&color=44cc11)](https://github.com/ikpil/DotFastLZ/issues)
 [![GitHub closed issues](https://img.shields.io/github/issues-closed-raw/ikpil/DotFastLZ?style=for-the-badge&logo=github&color=a371f7)](https://github.com/ikpil/DotFastLZ/issues)
 [![NuGet Version](https://img.shields.io/nuget/vpre/DotFastLZ.Compression?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/DotFastLZ.Compression)
-[![NuGet Downloads](https://img.shields.io/nuget/dt/DotFastLZ.Compression?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/DotFastLZ.Compression)
-[![Visitors](https://api.visitorbadge.io/api/daily?path=ikpil%2FDotFastLZ&countColor=%23263759)](https://visitorbadge.io/status?path=ikpil%2FDotFastLZ)
+~~~~[![NuGet Downloads](https://img.shields.io/nuget/dt/DotFastLZ.Compression?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/DotFastLZ.Compression)
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/ikpil?style=for-the-badge&logo=GitHub-Sponsors&link=https%3A%2F%2Fgithub.com%2Fsponsors%2Fikpil)](https://github.com/sponsors/ikpil)
 
 ---
