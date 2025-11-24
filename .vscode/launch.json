@@ -9,7 +9,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/test/DotFastLZ.Compression.Tests/bin/Debug/net7.0/DotFastLZ.Compression.Tests.dll",
+            "program": "${workspaceFolder}/test/DotFastLZ.Compression.Tests/bin/Debug/net10.0/DotFastLZ.Compression.Tests.dll",
             "args": [],
             "cwd": "${workspaceFolder}/test/DotFastLZ.Compression.Tests",
             "console": "internalConsole",
